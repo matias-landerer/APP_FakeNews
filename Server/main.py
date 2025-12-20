@@ -18,18 +18,7 @@ class Servidor:
         print(f"Servidor escuchando en {self.host} : {self.port}")
 
     def accept_connections_thread(self) -> None:
-        while True:
-            socket_cliente, address = self.socket_server.accept()
-            print(f"Nuevo cliente conectado: {socket_cliente} {address}")
-
-            listening_client_thread = ThreadCliente(
-                self.id_clientes, socket_cliente, address
-            )
-
-            self.clientes[self.id_clientes] = listening_client_thread
-
-            self.id_clientes += 1
-            listening_client_thread.start()
+        pass
 
 
 if __name__ == "__main__":
