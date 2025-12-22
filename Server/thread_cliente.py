@@ -1,11 +1,8 @@
 from socket import socket
-from queue import Queue
-from random import randint
+from random import shuffle
 from threading import Thread
-import parametros as p
+import parametros
 import json
-import time
-
 
 class ThreadCliente(Thread):
     def __init__(self, id_cliente: int, socket_cliente: socket, address: tuple) -> None:
@@ -15,22 +12,61 @@ class ThreadCliente(Thread):
         self.socket = socket_cliente
         self.address = address
 
-        self.mensajes_a_enviar = Queue()
-
         self.daemon = True
 
-        self.enviar_mensajes_thread = Thread(
-            target=self.procesar_mensajes_a_enviar, daemon=True
-        )
+        self.conectado = True
 
+    def desconectado(self) -> None:
+        self.conectado = False
+        self.socket.close()
 
-    def procesar_mensajes_a_enviar(self) -> None:
-        pass
-    def recibir_bytes(self, cantidad: int) -> bytearray:
-        pass
+    def enviar_mensaje(self, mensaje: dict) -> None:
+        mensaje_bytes = json.dumps(mensaje).encode('utf-8')
+        mensaje_len = len(mensaje_bytes)
+        if mensaje_len % parametros.N_BYTES_CHUNCK != 0:
+            relleno = parametros.N_BYTES_CHUNCK - (mensaje_len % parametros.N_BYTES_CHUNCK)
+            mensaje_bytes += b'\x00' * relleno
+        
+        total_paquetes = []
+        for i in range(0, len(mensaje_bytes), parametros.N_BYTES_CHUNCK):
+            chunck = mensaje_bytes[i:i + parametros.N_BYTES_CHUNCK]
+            id_chunck = (i // parametros.N_BYTES_CHUNCK).to_bytes(parametros.N_BYTES_ID, byteorder = 'big')
+            paquete_actual = id_chunck + chunck
+            paquete_actual_xor = bytes(x ^ y for x, y in zip(paquete_actual, parametros.CLAVE_CIFRADO))
+            total_paquetes.append(paquete_actual_xor)
+        
+        shuffle(total_paquetes)
+        largo_contenido = mensaje_len.to_bytes(parametros.N_BYTES_LEN, byteorder = "little")
+
+        paquete_final = largo_contenido + b''.join(total_paquetes)
+        self.socket.sendall(paquete_final)
+        print(f"{mensaje.keys()} enviado")
+    
+    def recibir_mensaje(self) -> None:
+        try:
+            while self.conectado:
+                mensaje = self.socket.recv(4096)
+                if not mensaje:
+                    self.desconectado
+                else:
+                    self.procesar_mensaje_recibido(mensaje)
+        except ConnectionResetError:
+            self.desconectado()
+
+    def procesar_mensaje_recibido(self, mensaje: bytes) -> dict:
+        largo_original = int.from_bytes(mensaje[:parametros.N_BYTES_LEN], "little")
+        paquetes = [mensaje[i:i + parametros.N_BYTES_CHUNCK + parametros.N_BYTES_ID]
+                    for i in range(parametros.N_BYTES_LEN, len(mensaje), parametros.N_BYTES_CHUNCK +
+                                   parametros.N_BYTES_ID)]
+        chunks = dict()
+        for paquete_cifrado in paquetes:
+            paquete = bytes(x ^ y for x, y in zip(paquete_cifrado, parametros.CLAVE_CIFRADO))
+            id_chunk = int.from_bytes(paquete[:parametros.N_BYTES_ID], "big")
+            chunks[id_chunk] = paquete[parametros.N_BYTES_ID:]
+
+        mensaje_reconstruido = b''.join(chunks[i] for i in sorted(chunks))
+        mensaje_reconstruido_final = mensaje_reconstruido[:largo_original]
+        return json.loads(mensaje_reconstruido_final.decode("utf-8"))
 
     def run(self) -> None:
-        pass
-
-    def procesar_mensaje(self, mensaje: dict) -> None:
-        pass
+        self.recibir_mensaje()

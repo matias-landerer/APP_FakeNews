@@ -18,7 +18,12 @@ class Servidor:
         print(f"Servidor escuchando en {self.host} : {self.port}")
 
     def accept_connections_thread(self) -> None:
-        pass
+        while True:
+            socket_cliente, address = self.socket_server.accept()
+            cliente_aceptado = ThreadCliente(self.id_cliente, socket_cliente, address)
+            self.clientes[self.id_cliente] = cliente_aceptado
+            self.id_cliente += 1
+            cliente_aceptado.start()
 
 
 if __name__ == "__main__":
@@ -32,5 +37,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Cerrando servidor")
 
-        server.socket_server.close()
-        exit(1)
+    server.socket_server.close()
+    exit(1)
