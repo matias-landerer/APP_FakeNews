@@ -1,6 +1,7 @@
 from socket import socket
 from random import shuffle
 from threading import Thread
+from API import verificar_titular
 import parametros
 import json
 
@@ -16,8 +17,18 @@ class ThreadCliente(Thread):
 
         self.conectado = True
 
+        #self.detector = FakeNewsDetector()
+
+    def ingresar_titular(self, titular) -> None:
+        resultado = verificar_titular(titular)
+
+        mensaje = {'Resultado' : resultado}
+
+        self.enviar_mensaje(mensaje)
+    
     def desconectado(self) -> None:
         self.conectado = False
+        print(f'Cliente N° {self.id_cliente} se ha desconectado')
         self.socket.close()
 
     def enviar_mensaje(self, mensaje: dict) -> None:
@@ -40,7 +51,6 @@ class ThreadCliente(Thread):
 
         paquete_final = largo_contenido + b''.join(total_paquetes)
         self.socket.sendall(paquete_final)
-        print(f"{mensaje.keys()} enviado")
     
     def recibir_mensaje(self) -> None:
         try:
@@ -49,7 +59,11 @@ class ThreadCliente(Thread):
                 if not mensaje:
                     self.desconectado
                 else:
-                    self.procesar_mensaje_recibido(mensaje)
+                    accion = self.procesar_mensaje_recibido(mensaje)
+                    if accion.keys() == 'IniciarSesion':
+                        pass
+                    elif 'Titular' in accion:
+                        self.ingresar_titular(accion['Titular'])
         except ConnectionResetError:
             self.desconectado()
 

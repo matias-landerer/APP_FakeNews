@@ -2,9 +2,8 @@ import socket
 import sys
 from thread_cliente import ThreadCliente
 
-
 class Servidor:
-    id_clientes = 0
+    id_cliente_nuevo = 0
 
     def __init__(self, port: int, host: str) -> None:
         self.host = host
@@ -20,9 +19,9 @@ class Servidor:
     def accept_connections_thread(self) -> None:
         while True:
             socket_cliente, address = self.socket_server.accept()
-            cliente_aceptado = ThreadCliente(self.id_cliente, socket_cliente, address)
-            self.clientes[self.id_cliente] = cliente_aceptado
-            self.id_cliente += 1
+            cliente_aceptado = ThreadCliente(self.id_cliente_nuevo, socket_cliente, address)
+            self.clientes[self.id_cliente_nuevo] = cliente_aceptado
+            self.id_cliente_nuevo += 1
             cliente_aceptado.start()
 
 
