@@ -1,5 +1,5 @@
 CREATE TABLE users(
-    ID SERIAL PRIMARY KEY,
+    ID INTEGER PRIMARY KEY,
     username VARCHAR(255),
     email VARCHAR(255),
     clave VARCHAR(255),
