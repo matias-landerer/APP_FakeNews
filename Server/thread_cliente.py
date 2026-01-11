@@ -17,8 +17,12 @@ class ThreadCliente(Thread):
 
         self.conectado = True
 
-        #self.detector = FakeNewsDetector()
-
+    def registrarse(self) -> None:
+        pass
+    
+    def iniciar_sesion(self) -> None:
+        pass
+    
     def ingresar_titular(self, titular) -> None:
         resultado = verificar_titular(titular)
 
@@ -57,11 +61,13 @@ class ThreadCliente(Thread):
             while self.conectado:
                 mensaje = self.socket.recv(4096)
                 if not mensaje:
-                    self.desconectado
+                    self.desconectado()
                 else:
                     accion = self.procesar_mensaje_recibido(mensaje)
-                    if accion.keys() == 'IniciarSesion':
-                        pass
+                    if 'Registrarse' in accion:
+                        self.registrarse()
+                    elif 'IniciarSesion' in accion:
+                        self.iniciar_sesion()
                     elif 'Titular' in accion:
                         self.ingresar_titular(accion['Titular'])
         except ConnectionResetError:
