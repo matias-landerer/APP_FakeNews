@@ -4,6 +4,7 @@ from threading import Thread
 from API import verificar_titular
 import parametros
 import json
+import psycopg
 
 class ThreadCliente(Thread):
     def __init__(self, id_cliente: int, socket_cliente: socket, address: tuple) -> None:
@@ -17,11 +18,44 @@ class ThreadCliente(Thread):
 
         self.conectado = True
 
-    def registrarse(self) -> None:
-        pass
+    def registrarse(self, username: str, email: str, password: str) -> None:
+        conn = psycopg.connect(
+            host=parametros.host,
+            dbname=parametros.dbname,
+            user=parametros.user,
+            password=parametros.password
+        )
+        
+        with conn.cursor() as cur:
+            cur.execute(
+            "INSERT INTO users (ID, username, email, clave) VALUES (%s, %s, %s, %s)",
+            (self.id_cliente, username, email, password)
+        )
+        conn.commit()
+        conn.close()
     
-    def iniciar_sesion(self) -> None:
-        pass
+    def iniciar_sesion(self, username: str, password: str) -> None:
+        conn = psycopg.connect(
+            host=parametros.host,
+            dbname=parametros.dbname,
+            user=parametros.user,
+            password=parametros.password
+        )
+        
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM users WHERE username = %s;", (username,))
+            filas = cur.fetchall()
+            if filas[0][3] != password:
+                print("ERROR")
+                self.desconectado()
+            self.id_cliente = filas[0][0]
+        
+        conn.close()
+    
+    def desconectado(self) -> None:
+        self.conectado = False
+        print(f'Cliente N° {self.id_cliente} se ha desconectado')
+        self.socket.close()
     
     def ingresar_titular(self, titular) -> None:
         resultado = verificar_titular(titular)
@@ -29,11 +63,6 @@ class ThreadCliente(Thread):
         mensaje = {'Resultado' : resultado}
 
         self.enviar_mensaje(mensaje)
-    
-    def desconectado(self) -> None:
-        self.conectado = False
-        print(f'Cliente N° {self.id_cliente} se ha desconectado')
-        self.socket.close()
 
     def enviar_mensaje(self, mensaje: dict) -> None:
         mensaje_bytes = json.dumps(mensaje).encode('utf-8')
@@ -67,7 +96,7 @@ class ThreadCliente(Thread):
                     if 'Registrarse' in accion:
                         self.registrarse()
                     elif 'IniciarSesion' in accion:
-                        self.iniciar_sesion()
+                        self.iniciar_sesion(accion['IniciarSesion'][0], accion['IniciarSesion'][1])
                     elif 'Titular' in accion:
                         self.ingresar_titular(accion['Titular'])
         except ConnectionResetError:
