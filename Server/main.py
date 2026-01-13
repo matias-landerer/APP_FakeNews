@@ -1,40 +1,64 @@
-import socket
-import sys
-from thread_cliente import ThreadCliente
+from API import verificar_titular
+from conexionBDD import get_db
+from flask import Flask, request, jsonify
 
-class Servidor:
-    id_cliente_nuevo = 0
+app = Flask(__name__)
 
-    def __init__(self, port: int, host: str) -> None:
-        self.host = host
-        self.port = port
-        self.clientes = {}
-        self.socket_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+@app.route("/login", methods = ["POST"])
+def login():
+    data = request.json
+    username = data['username']
+    password = data['password']
 
-    def bind_listen(self) -> None:
-        self.socket_server.bind((self.host, self.port))
-        self.socket_server.listen()
-        print(f"Servidor escuchando en {self.host} : {self.port}")
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT id, clave FROM users WHERE username = %s",
+            (username,)
+        )
+        row = cur.fetchone()
+    conn.close()
 
-    def accept_connections_thread(self) -> None:
-        while True:
-            socket_cliente, address = self.socket_server.accept()
-            cliente_aceptado = ThreadCliente(self.id_cliente_nuevo, socket_cliente, address)
-            self.clientes[self.id_cliente_nuevo] = cliente_aceptado
-            self.id_cliente_nuevo += 1
-            cliente_aceptado.start()
+    if not row:
+        return jsonify({"error": "UsuarioNoExiste"}), 401
+
+    if password != row[1]:
+        return jsonify({"error": "ContraseñaIncorrecta"}), 401
+
+    return jsonify({
+        "status": "InicioExitoso",
+        "user_id": row[0]
+    })
+
+@app.route("/register", methods=["POST"])
+def register():
+    data = request.json
+    username = data["username"]
+    email = data["email"]
+    password = data["password"]  # luego se hashea
+
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO users (username, email, clave) VALUES (%s, %s, %s)",
+            (username, email, password)
+        )
+        conn.commit()
+    conn.close()
+
+    return jsonify({"status": "RegistroExitoso"})
 
 
-if __name__ == "__main__":
-    PORT = 4444 if len(sys.argv) < 2 else int(sys.argv[1])
-    HOST = "localhost" if len(sys.argv) < 3 else sys.argv[2]
-    server = Servidor(PORT, HOST)
-    server.bind_listen()
-    print("Presione Control+C para detener el servidor")
-    try:
-        server.accept_connections_thread()
-    except KeyboardInterrupt:
-        print("Cerrando servidor")
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    data = request.json
+    titular = data["titular"]
 
-    server.socket_server.close()
-    exit(1)
+    resultado = verificar_titular(titular)
+
+    return jsonify({
+        "resultado": resultado
+    })
+
+if __name__ == '__main__':
+    app.run()
