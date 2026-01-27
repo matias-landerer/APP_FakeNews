@@ -28,7 +28,7 @@ def login():
     return jsonify({
         "status": "InicioExitoso",
         "user_id": row[0]
-    })
+    }), 200
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -46,7 +46,7 @@ def register():
         conn.commit()
     conn.close()
 
-    return jsonify({"status": "RegistroExitoso"})
+    return jsonify({"status": "RegistroExitoso"}), 200
 
 
 @app.route("/analyze", methods=["POST"])

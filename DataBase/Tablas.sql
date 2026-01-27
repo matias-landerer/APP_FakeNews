@@ -1,12 +1,14 @@
+DROP TABLE IF EXISTS users, consultas;
+
 CREATE TABLE users(
-    ID INTEGER PRIMARY KEY,
+    ID SERIAL PRIMARY KEY,
     username VARCHAR(255),
     email VARCHAR(255),
     clave VARCHAR(255),
     is_premium BOOLEAN DEFAULT false
 );
 
-CREATE TABLE Consultas(
+CREATE TABLE consultas(
     ID SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     titular VARCHAR(255),
