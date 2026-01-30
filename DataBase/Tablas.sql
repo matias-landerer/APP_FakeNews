@@ -13,7 +13,7 @@ CREATE TABLE consultas(
     user_id INTEGER NOT NULL,
     titular VARCHAR(255),
     resultado VARCHAR(255),
-    fecha TIMESTAMP
+    fecha TIMESTAMP,
     CONSTRAINT fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES "users"(ID)

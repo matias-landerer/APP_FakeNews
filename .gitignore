@@ -1,8 +1,23 @@
 __pycache__
 parametros.py
 API.py
-Client
 prueba.py
 
-Server(original)
-Client(original)
+uninstall.py
+
+venv
+
+#Flutter:
+android/
+ios/
+linux/
+macos/
+test/
+web/
+windows/
+.metadata
+analysis_options.yaml
+pubspec.lock
+pubspec.yaml
+Client/client_flutter/README.md
+Client/client_flutter/.gitignore

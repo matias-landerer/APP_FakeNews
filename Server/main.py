@@ -20,10 +20,10 @@ def login():
     conn.close()
 
     if not row:
-        return jsonify({"error": "UsuarioNoExiste"}), 401
+        return jsonify({"status": "UsuarioNoExiste"}), 401
 
     if password != row[1]:
-        return jsonify({"error": "ContraseñaIncorrecta"}), 401
+        return jsonify({"status": "ContraseñaIncorrecta"}), 401
 
     return jsonify({
         "status": "InicioExitoso",
