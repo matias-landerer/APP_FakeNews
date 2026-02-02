@@ -39,11 +39,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (data["status"] == "InicioExitoso") {
       // Login exitoso → ir a Home
-      Navigator.pushReplacementNamed(context, "/home");
-    }
-    
-    else if  (data["status"] == "UsuarioNoExiste") {
-      Navigator.pushReplacementNamed(context, "/register");
+      Navigator.pushNamed(context, "/home");
     }
     
     else {
@@ -77,6 +73,14 @@ class _LoginPageState extends State<LoginPage> {
                 onPressed: login,
                 child: const Text("Entrar"),
               ),
+            
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, "/register");
+              },
+              child: const Text("Crear cuenta"),
+            ),
+            
             const SizedBox(height: 10),
             Text(error, style: const TextStyle(color: Colors.red)),
           ],
