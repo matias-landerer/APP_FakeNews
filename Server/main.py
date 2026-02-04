@@ -48,7 +48,6 @@ def register():
 
     return jsonify({"status": "RegistroExitoso"}), 200
 
-
 @app.route("/analyze", methods=["POST"])
 def analyze():
     data = request.json
@@ -59,6 +58,22 @@ def analyze():
     return jsonify({
         "resultado": resultado
     })
+
+@app.route("/statistics", methods=["GET"])
+def show_stats():
+    data = request.json
+    user_id = data['id']
+    
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT titular, resultado, fecha FROM consultas WHERE user_id = %s",
+            (user_id,)
+        )
+        rows = cur.fetchall()
+    conn.close()
+
+    return jsonify({"data" : rows})
 
 if __name__ == '__main__':
     app.run()
