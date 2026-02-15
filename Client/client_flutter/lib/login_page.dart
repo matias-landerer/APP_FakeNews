@@ -16,6 +16,8 @@ class _LoginPageState extends State<LoginPage> {
   String error = "";
   bool loading = false;
 
+  int userid = 0;
+
   Future<void> login() async {
     setState(() {
       loading = true;
@@ -39,7 +41,8 @@ class _LoginPageState extends State<LoginPage> {
 
     if (data["status"] == "InicioExitoso") {
       // Login exitoso → ir a Home
-      Navigator.pushNamed(context, "/home");
+      userid = data["user_id"];
+      Navigator.pushNamed(context, "/home", arguments: userid);
     }
     
     else {

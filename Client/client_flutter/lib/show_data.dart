@@ -9,10 +9,10 @@ class ShowDataPage extends StatefulWidget {
 }
 
 class _ShowDataPageState extends State<ShowDataPage> {
-  final userIdController = TextEditingController();
   bool loading = false;
   String error = "";
   bool autoLoaded = false;
+  int? userId; // Guardamos el userId recibido
   List<List<dynamic>> rows = [];
 
   Future<void> showData(int userId) async {
@@ -65,70 +65,53 @@ class _ShowDataPageState extends State<ShowDataPage> {
     }
     autoLoaded = true;
     final args = ModalRoute.of(context)?.settings.arguments;
+    
     if (args is int) {
+      userId = args;
       showData(args);
     } else if (args is String) {
       final parsed = int.tryParse(args);
       if (parsed != null) {
+        userId = parsed;
         showData(parsed);
       }
+    } else {
+      // Si no se recibe argumento, mostramos error
+      setState(() {
+        error = "No se recibió ID de usuario.";
+      });
     }
-  }
-
-  @override
-  void dispose() {
-    userIdController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Estadísticas"),
+        title: Text(userId != null 
+            ? "Estadísticas" 
+            : "Estadísticas"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: userIdController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: "ID de usuario",
-              ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: loading
-                  ? null
-                  : () {
-                      final userId = int.tryParse(userIdController.text);
-                      if (userId == null) {
-                        setState(() {
-                          error = "Ingresa un ID de usuario válido.";
-                        });
-                        return;
-                      }
-                      showData(userId);
-                    },
-              child: const Text("Cargar datos"),
-            ),
-            const SizedBox(height: 12),
             if (loading) const LinearProgressIndicator(),
             if (error.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
                   error,
                   style: const TextStyle(color: Colors.red),
                 ),
               ),
-            const SizedBox(height: 8),
             Expanded(
               child: rows.isEmpty
-                  ? const Center(child: Text("Sin datos para mostrar."))
+                  ? Center(
+                      child: loading
+                          ? const CircularProgressIndicator()
+                          : const Text("Sin datos para mostrar."),
+                    )
                   : ListView.separated(
                       itemCount: rows.length,
                       separatorBuilder: (context, index) =>

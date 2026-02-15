@@ -9,6 +9,17 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int? userId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is int) {
+      userId = args;
+    }
+  }
+
   final controller = TextEditingController();
   String resultado = "";
   bool showOptions = false;
@@ -19,6 +30,7 @@ class _HomePageState extends State<HomePage> {
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "titular": controller.text,
+        "user_id": userId,
       }),
     );
 
@@ -95,7 +107,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 12),
                       InkWell(
                         onTap: () {
-                          Navigator.pushNamed(context, "/statistics");
+                          Navigator.pushNamed(context, "/statistics", arguments: userId);
                         },
                         child: const Text(
                           "Ir a datos",

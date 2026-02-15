@@ -52,8 +52,18 @@ def register():
 def analyze():
     data = request.json
     titular = data["titular"]
+    user_id = data["user_id"]
 
     resultado = verificar_titular(titular)
+
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO consultas (user_id, titular, resultado) VALUES (%s, %s, %s)",
+            (user_id, titular, resultado["label"])
+        )
+        conn.commit()
+    conn.close()
 
     return jsonify({
         "resultado": resultado
@@ -73,7 +83,7 @@ def show_stats():
         rows = cur.fetchall()
     conn.close()
 
-    return jsonify({"data" : rows})
+    return jsonify({"data" : rows}), 200
 
 if __name__ == '__main__':
     app.run()
