@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'parametros.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -24,7 +25,7 @@ class _ShowDataPageState extends State<ShowDataPage> {
     try {
       final request = http.Request(
         "GET",
-        Uri.parse("http://10.0.2.2:5000/statistics"),
+        Uri.parse("$API_BASE_URL/statistics"),
       );
       request.headers["Content-Type"] = "application/json";
       request.body = jsonEncode({"id": userId});

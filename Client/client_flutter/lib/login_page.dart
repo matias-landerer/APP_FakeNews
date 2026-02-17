@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'parametros.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -25,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     final response = await http.post(
-      Uri.parse("http://10.0.2.2:5000/login"),
+      Uri.parse("$API_BASE_URL/login"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "username": userController.text,

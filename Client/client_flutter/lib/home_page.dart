@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'parametros.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -26,7 +27,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> enviarTitular() async {
     final response = await http.post(
-      Uri.parse("http://10.0.2.2:5000/analyze"),
+      Uri.parse("$API_BASE_URL/analyze"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "titular": controller.text,
