@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'parametros.dart';
+import 'dart:io';  // ← Para SocketException
+import 'dart:async';  // ← Para TimeoutException
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,11 +22,12 @@ class _LoginPageState extends State<LoginPage> {
   int userid = 0;
 
   Future<void> login() async {
-    setState(() {
-      loading = true;
-      error = "";
-    });
+  setState(() {
+    loading = true;
+    error = "";
+  });
 
+  try {
     final response = await http.post(
       Uri.parse("$API_BASE_URL/login"),
       headers: {"Content-Type": "application/json"},
@@ -32,6 +35,8 @@ class _LoginPageState extends State<LoginPage> {
         "username": userController.text,
         "password": passController.text,
       }),
+    ).timeout(
+      const Duration(seconds: 10),  // Timeout de 10 segundos
     );
 
     final data = jsonDecode(response.body);
@@ -41,17 +46,39 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (data["status"] == "InicioExitoso") {
-      // Login exitoso → ir a Home
       userid = data["user_id"];
       Navigator.pushNamed(context, "/home", arguments: userid);
-    }
-    
-    else {
+    } else {
       setState(() {
         error = data["status"];
       });
     }
+  } on TimeoutException catch (_) {
+    // Timeout - el servidor no responde a tiempo
+    setState(() {
+      loading = false;
+      error = "El servidor tardó demasiado en responder. Intenta de nuevo.";
+    });
+  } on SocketException catch (_) {
+    // Sin conexión a internet o servidor no disponible
+    setState(() {
+      loading = false;
+      error = "No se pudo conectar al servidor. Verifica tu conexión a internet.";
+    });
+  } on FormatException catch (_) {
+    // Respuesta del servidor no es JSON válido
+    setState(() {
+      loading = false;
+      error = "Error en la respuesta del servidor.";
+    });
+  } catch (e) {
+    // Cualquier otro error
+    setState(() {
+      loading = false;
+      error = "Error inesperado: ${e.toString()}";
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {

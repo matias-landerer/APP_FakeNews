@@ -8,6 +8,7 @@ uninstall.py
 venv
 
 #Flutter:
+assets/
 android/
 ios/
 linux/
@@ -22,7 +23,3 @@ pubspec.yaml
 Client/client_flutter/README.md
 Client/client_flutter/.gitignore
 parametros.dart
-
-
-LOGO.png
-LOGO(sin fondo).png
