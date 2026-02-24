@@ -49,7 +49,6 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Fake News Detector"),
         actions: [
           IconButton(
             tooltip: showOptions ? "Ocultar opciones" : "Mostrar opciones",

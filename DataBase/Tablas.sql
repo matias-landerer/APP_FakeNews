@@ -14,7 +14,6 @@ CREATE TABLE consultas(
     titular VARCHAR(255),
     score VARCHAR(255),
     label VARCHAR(255),
-    fecha TIMESTAMP,
     CONSTRAINT fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES "users"(ID)

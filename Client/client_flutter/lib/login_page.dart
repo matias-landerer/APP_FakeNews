@@ -82,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
     const secondary = Color(0xFFEF342A);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Iniciar sesión")),
+      appBar: AppBar(),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -147,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, "/register");
+                        Navigator.pushReplacementNamed(context, "/register");
                       },
                       child: const Text("Crear cuenta"),
                     ),

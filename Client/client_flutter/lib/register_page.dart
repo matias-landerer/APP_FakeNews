@@ -55,7 +55,7 @@ class _RegisterPageState extends State<RegisterPage> {
     const secondary = Color(0xFFEF342A);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Crear cuenta")),
+      appBar: AppBar(),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -128,7 +128,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (!loading)
                       ElevatedButton(
                         onPressed: register,
-                        child: const Text("Entrar"),
+                        child: const Text("Registrarse"),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, "/login");
+                        },
+                        child: const Text("Ya tengo una cuenta"),
                       ),
                     if (error.isNotEmpty) ...[
                       const SizedBox(height: 10),

@@ -130,10 +130,10 @@ class _ShowDataPageState extends State<ShowDataPage> {
                           final titular = row.isNotEmpty
                               ? (row[0]?.toString() ?? "")
                               : "";
-                          final resultado = row.length > 1
+                          final score = row.length > 1
                               ? (row[1]?.toString() ?? "")
                               : "";
-                          final fecha = row.length > 2
+                          final label = row.length > 2
                               ? (row[2]?.toString() ?? "")
                               : "";
 
@@ -160,7 +160,7 @@ class _ShowDataPageState extends State<ShowDataPage> {
                               subtitle: Padding(
                                 padding: const EdgeInsets.only(top: 6),
                                 child: Text(
-                                  "Resultado: $resultado\nFecha: $fecha",
+                                  "Resultado: $score\nExplicación: $label",
                                 ),
                               ),
                             ),
