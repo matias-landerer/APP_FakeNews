@@ -31,10 +31,7 @@ class _HomePageState extends State<HomePage> {
     final response = await http.post(
       Uri.parse("$API_BASE_URL/analyze"),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "titular": controller.text,
-        "user_id": userId,
-      }),
+      body: jsonEncode({"titular": controller.text, "user_id": userId}),
     );
 
     final data = jsonDecode(response.body);
@@ -48,6 +45,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    const secondary = Color(0xFFEF342A);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Fake News Detector"),
@@ -65,35 +64,95 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                TextField(
-                  controller: controller,
-                  decoration: const InputDecoration(
-                    labelText: "Titular de la noticia",
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.86),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          "Fake News Detector",
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1D1D1B),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Ingresa el titular para estimar si es real o falso.",
+                          style: TextStyle(color: Color(0xFF6C6C66)),
+                        ),
+                        const SizedBox(height: 20),
+                        TextField(
+                          controller: controller,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: "Titular de la noticia",
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: enviarTitular,
+                          child: const Text("Analizar"),
+                        ),
+                        const SizedBox(height: 20),
+                        if (score.isNotEmpty ||
+                            label.isNotEmpty ||
+                            fuentes.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE4E4D8),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: secondary.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "La noticia es '$score' real",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(label),
+                                const SizedBox(height: 10),
+                                const Text(
+                                  "Fuentes:",
+                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(fuentes),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: enviarTitular,
-                  child: const Text("Analizar"),
-                ),
-                const SizedBox(height: 20),
-                if (score.isNotEmpty || label.isNotEmpty || fuentes.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("La noticia es '$score' real"),
-                      const SizedBox(height: 8),
-                      Text(label),
-                      const SizedBox(height: 8),
-                      const Text("Fuentes:"),
-                      Text(fuentes),
-                    ],
-                  ),
-              ],
+              ),
             ),
           ),
           AnimatedPositioned(
@@ -104,8 +163,8 @@ class _HomePageState extends State<HomePage> {
             right: showOptions ? 0 : -260,
             width: 260,
             child: Material(
-              elevation: 8,
-              color: Colors.grey.shade100,
+              elevation: 10,
+              color: Colors.white,
               child: SafeArea(
                 left: false,
                 right: false,
@@ -117,24 +176,30 @@ class _HomePageState extends State<HomePage> {
                       const Text(
                         "Opciones",
                         style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                          color: Color(0xFF1D1D1B),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       InkWell(
                         onTap: () {
-                          Navigator.pushNamed(context, "/statistics", arguments: userId);
+                          Navigator.pushNamed(
+                            context,
+                            "/statistics",
+                            arguments: userId,
+                          );
                         },
                         child: const Text(
                           "Ir a datos",
                           style: TextStyle(
-                            color: Colors.blue,
+                            color: secondary,
                             decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 14),
                       InkWell(
                         onTap: () {
                           Navigator.pushNamedAndRemoveUntil(
@@ -146,8 +211,9 @@ class _HomePageState extends State<HomePage> {
                         child: const Text(
                           "Cerrar sesión",
                           style: TextStyle(
-                            color: Colors.blue,
+                            color: secondary,
                             decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),

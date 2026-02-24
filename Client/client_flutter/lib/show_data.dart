@@ -13,7 +13,7 @@ class _ShowDataPageState extends State<ShowDataPage> {
   bool loading = false;
   String error = "";
   bool autoLoaded = false;
-  int? userId; // Guardamos el userId recibido
+  int? userId;
   List<List<dynamic>> rows = [];
 
   Future<void> showData(int userId) async {
@@ -66,7 +66,7 @@ class _ShowDataPageState extends State<ShowDataPage> {
     }
     autoLoaded = true;
     final args = ModalRoute.of(context)?.settings.arguments;
-    
+
     if (args is int) {
       userId = args;
       showData(args);
@@ -77,7 +77,6 @@ class _ShowDataPageState extends State<ShowDataPage> {
         showData(parsed);
       }
     } else {
-      // Si no se recibe argumento, mostramos error
       setState(() {
         error = "No se recibió ID de usuario.";
       });
@@ -86,61 +85,91 @@ class _ShowDataPageState extends State<ShowDataPage> {
 
   @override
   Widget build(BuildContext context) {
+    const secondary = Color(0xFFEF342A);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(userId != null 
-            ? "Estadísticas" 
-            : "Estadísticas"),
+        title: Text(userId != null ? "Estadísticas" : "Estadísticas"),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (loading) const LinearProgressIndicator(),
-            if (error.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  error,
-                  style: const TextStyle(color: Colors.red),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (loading)
+                const ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(999)),
+                  child: LinearProgressIndicator(color: secondary),
                 ),
-              ),
-            Expanded(
-              child: rows.isEmpty
-                  ? Center(
-                      child: loading
-                          ? const CircularProgressIndicator()
-                          : const Text("Sin datos para mostrar."),
-                    )
-                  : ListView.separated(
-                      itemCount: rows.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final row = rows[index];
-                        final titular = row.isNotEmpty
-                            ? (row[0]?.toString() ?? "")
-                            : "";
-                        final resultado = row.length > 1
-                            ? (row[1]?.toString() ?? "")
-                            : "";
-                        final fecha = row.length > 2
-                            ? (row[2]?.toString() ?? "")
-                            : "";
-
-                        return Card(
-                          child: ListTile(
-                            title: Text(titular),
-                            subtitle: Text(
-                              "Resultado: $resultado\nFecha: $fecha",
-                            ),
-                          ),
-                        );
-                      },
+              if (error.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 8),
+                  child: Text(
+                    error,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: secondary,
+                      fontWeight: FontWeight.w700,
                     ),
-            ),
-          ],
+                  ),
+                ),
+              Expanded(
+                child: rows.isEmpty
+                    ? Center(
+                        child: loading
+                            ? const CircularProgressIndicator(color: secondary)
+                            : const Text("Sin datos para mostrar."),
+                      )
+                    : ListView.separated(
+                        itemCount: rows.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final row = rows[index];
+                          final titular = row.isNotEmpty
+                              ? (row[0]?.toString() ?? "")
+                              : "";
+                          final resultado = row.length > 1
+                              ? (row[1]?.toString() ?? "")
+                              : "";
+                          final fecha = row.length > 2
+                              ? (row[2]?.toString() ?? "")
+                              : "";
+
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.86),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: Colors.white),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.06),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                titular,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
+                                  "Resultado: $resultado\nFecha: $fecha",
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

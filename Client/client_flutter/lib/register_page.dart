@@ -42,11 +42,8 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     if (data["status"] == "RegistroExitoso") {
-      // Login exitoso → ir a Home
       Navigator.pushReplacementNamed(context, "/home");
-    }
-    
-    else {
+    } else {
       setState(() {
         error = data["status"];
       });
@@ -55,40 +52,100 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    const secondary = Color(0xFFEF342A);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Iniciar sesión")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: userController,
-              decoration: const InputDecoration(labelText: "Usuario"),
-            ),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
-            ),
-            TextField(
-              controller: passController,
-              decoration: const InputDecoration(labelText: "Contraseña"),
-              obscureText: true,
-            ),
-            TextField(
-              controller: pass2Controller,
-              decoration: const InputDecoration(labelText: "Confirme Contraseña"),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            if (loading) const CircularProgressIndicator(),
-            if (!loading)
-              ElevatedButton(
-                onPressed: register,
-                child: const Text("Entrar"),
+      appBar: AppBar(title: const Text("Crear cuenta")),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.86),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Icon(
+                      Icons.person_add_alt_1_rounded,
+                      size: 34,
+                      color: secondary,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Crear cuenta",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1D1D1B),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: userController,
+                      decoration: const InputDecoration(labelText: "Usuario"),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: emailController,
+                      decoration: const InputDecoration(labelText: "Email"),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: passController,
+                      decoration: const InputDecoration(
+                        labelText: "Contraseña",
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: pass2Controller,
+                      decoration: const InputDecoration(
+                        labelText: "Confirme Contraseña",
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 20),
+                    if (loading)
+                      const Center(
+                        child: CircularProgressIndicator(color: secondary),
+                      ),
+                    if (!loading)
+                      ElevatedButton(
+                        onPressed: register,
+                        child: const Text("Entrar"),
+                      ),
+                    if (error.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        error,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: secondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            const SizedBox(height: 10),
-            Text(error, style: const TextStyle(color: Colors.red)),
-          ],
+            ),
+          ),
         ),
       ),
     );

@@ -12,7 +12,8 @@ CREATE TABLE consultas(
     ID SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     titular VARCHAR(255),
-    resultado VARCHAR(255),
+    score VARCHAR(255),
+    label VARCHAR(255),
     fecha TIMESTAMP,
     CONSTRAINT fk_user_id
         FOREIGN KEY (user_id)
