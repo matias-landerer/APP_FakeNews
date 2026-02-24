@@ -22,7 +22,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   final controller = TextEditingController();
-  String resultado = "";
+  String score = "";
+  String label = "";
+  String fuentes = "";
   bool showOptions = false;
 
   Future<void> enviarTitular() async {
@@ -37,7 +39,10 @@ class _HomePageState extends State<HomePage> {
 
     final data = jsonDecode(response.body);
     setState(() {
-      resultado = data["resultado"]["label"];
+      final resultado = data["resultado"] ?? {};
+      score = (resultado["score"] ?? "").toString();
+      label = (resultado["label"] ?? "").toString();
+      fuentes = (resultado["fuentes"] ?? "").toString();
     });
   }
 
@@ -76,7 +81,18 @@ class _HomePageState extends State<HomePage> {
                   child: const Text("Analizar"),
                 ),
                 const SizedBox(height: 20),
-                Text(resultado),
+                if (score.isNotEmpty || label.isNotEmpty || fuentes.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("La noticia es '$score' real"),
+                      const SizedBox(height: 8),
+                      Text(label),
+                      const SizedBox(height: 8),
+                      const Text("Fuentes:"),
+                      Text(fuentes),
+                    ],
+                  ),
               ],
             ),
           ),

@@ -47,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (data["status"] == "InicioExitoso") {
       userid = data["user_id"];
-      Navigator.pushNamed(context, "/home", arguments: userid);
+      Navigator.pushReplacementNamed(context, "/home", arguments: userid);
     } else {
       setState(() {
         error = data["status"];
