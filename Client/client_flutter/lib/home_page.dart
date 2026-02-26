@@ -201,6 +201,20 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 14),
                       InkWell(
                         onTap: () {
+                          Navigator.pushNamed(context, "/info");
+                        },
+                        child: const Text(
+                          "Ir a info",
+                          style: TextStyle(
+                            color: secondary,
+                            decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      InkWell(
+                        onTap: () {
                           Navigator.pushNamedAndRemoveUntil(
                             context,
                             "/login",

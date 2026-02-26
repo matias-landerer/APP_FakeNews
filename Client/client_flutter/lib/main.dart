@@ -3,6 +3,7 @@ import 'login_page.dart';
 import 'home_page.dart';
 import 'register_page.dart';
 import 'show_data.dart';
+import 'info.dart';
 
 void main() {
   runApp(const MyApp());
@@ -86,6 +87,7 @@ class MyApp extends StatelessWidget {
         "/home": (context) => const HomePage(),
         "/register": (context) => const RegisterPage(),
         "/statistics": (context) => const ShowDataPage(),
+        "/info": (context) => const InfoPage(),
       },
     );
   }

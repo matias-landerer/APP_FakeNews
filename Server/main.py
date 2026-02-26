@@ -41,6 +41,22 @@ def register():
     username = data["username"]
     email = data["email"]
     password = data["password"]
+    pass2 = data["pass2"]
+
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT * FROM users WHERE username = %s",
+            (username,)
+        )
+        row = cur.fetchone()
+    conn.close()
+
+    if row:
+        return jsonify({"status": "UsuarioYaExiste"}), 401
+
+    if password != pass2:
+        return jsonify({"status": "ContraseñasNoCoinciden"}), 401
 
     password = password.encode("utf-8")
     salt = bcrypt.gensalt()
@@ -86,7 +102,7 @@ def show_stats():
     conn = get_db()
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT titular, score, label, fecha FROM consultas WHERE user_id = %s",
+            "SELECT titular, score, label FROM consultas WHERE user_id = %s",
             (user_id,)
         )
         rows = cur.fetchall()
