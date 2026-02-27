@@ -89,7 +89,7 @@ class _ShowDataPageState extends State<ShowDataPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(userId != null ? "Estadísticas" : "Estadísticas"),
+        title: Text(userId != null ? "Historial" : "Historial"),
       ),
       body: SafeArea(
         child: Padding(

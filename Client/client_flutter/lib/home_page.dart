@@ -25,22 +25,35 @@ class _HomePageState extends State<HomePage> {
   String score = "";
   String label = "";
   String fuentes = "";
+  bool loading = false;
   bool showOptions = false;
 
   Future<void> enviarTitular() async {
-    final response = await http.post(
-      Uri.parse("$API_BASE_URL/analyze"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"titular": controller.text, "user_id": userId}),
-    );
-
-    final data = jsonDecode(response.body);
     setState(() {
-      final resultado = data["resultado"] ?? {};
-      score = (resultado["score"] ?? "").toString();
-      label = (resultado["label"] ?? "").toString();
-      fuentes = (resultado["fuentes"] ?? "").toString();
+      loading = true;
     });
+
+    try {
+      final response = await http.post(
+        Uri.parse("$API_BASE_URL/analyze"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"titular": controller.text, "user_id": userId}),
+      );
+
+      final data = jsonDecode(response.body);
+      setState(() {
+        final resultado = data["resultado"] ?? {};
+        score = (resultado["score"] ?? "").toString();
+        label = (resultado["label"] ?? "").toString();
+        fuentes = (resultado["fuentes"] ?? "").toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -108,10 +121,15 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: enviarTitular,
-                          child: const Text("Analizar"),
-                        ),
+                        if (loading)
+                          const Center(
+                            child: CircularProgressIndicator(color: secondary),
+                          ),
+                        if (!loading)
+                          ElevatedButton(
+                            onPressed: enviarTitular,
+                            child: const Text("Analizar"),
+                          ),
                         const SizedBox(height: 20),
                         if (score.isNotEmpty ||
                             label.isNotEmpty ||
@@ -190,7 +208,7 @@ class _HomePageState extends State<HomePage> {
                           );
                         },
                         child: const Text(
-                          "Ir a datos",
+                          "Historial de consultas",
                           style: TextStyle(
                             color: secondary,
                             decoration: TextDecoration.underline,

@@ -19,6 +19,8 @@ class _RegisterPageState extends State<RegisterPage> {
   String error = "";
   bool loading = false;
 
+  int userid = 0;
+
   Future<void> register() async {
     setState(() {
       loading = true;
@@ -43,7 +45,8 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     if (data["status"] == "RegistroExitoso") {
-      Navigator.pushReplacementNamed(context, "/home");
+      userid = data["user_id"];
+      Navigator.pushReplacementNamed(context, "/home", arguments: userid);
     } else {
       setState(() {
         error = data["status"];

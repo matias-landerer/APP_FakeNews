@@ -23,12 +23,12 @@ def login():
     conn.close()
 
     if not row:
-        return jsonify({"status": "UsuarioNoExiste"}), 401
+        return jsonify({"status": "Usuario ingresado no existe."}), 401
 
     hashed = row[1].encode("utf-8") if isinstance(row[1], str) else row[1]
     
     if not bcrypt.checkpw(password, hashed):
-        return jsonify({"status": "ContraseñaIncorrecta"}), 401
+        return jsonify({"status": "Contraseña incorrecta"}), 401
 
     return jsonify({
         "status": "InicioExitoso",
@@ -53,10 +53,10 @@ def register():
     conn.close()
 
     if row:
-        return jsonify({"status": "UsuarioYaExiste"}), 401
+        return jsonify({"status": "El usuario ingresado ya ha sido usado."}), 401
 
     if password != pass2:
-        return jsonify({"status": "ContraseñasNoCoinciden"}), 401
+        return jsonify({"status": "Contraseñas No Coinciden"}), 401
 
     password = password.encode("utf-8")
     salt = bcrypt.gensalt()
@@ -71,7 +71,19 @@ def register():
         conn.commit()
     conn.close()
 
-    return jsonify({"status": "RegistroExitoso"}), 200
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT * FROM users WHERE username = %s",
+            (username,)
+        )
+        row = cur.fetchone()
+    conn.close()
+
+    return jsonify({
+        "status": "RegistroExitoso",
+        "user_id": row[0]
+        }), 200
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
