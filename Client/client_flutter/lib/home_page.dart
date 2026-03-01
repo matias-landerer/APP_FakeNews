@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'parametros.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -25,27 +27,59 @@ class _HomePageState extends State<HomePage> {
   String score = "";
   String label = "";
   String fuentes = "";
+  String error = "";
   bool loading = false;
   bool showOptions = false;
 
   Future<void> enviarTitular() async {
     setState(() {
       loading = true;
+      error = "";
     });
 
     try {
-      final response = await http.post(
-        Uri.parse("$API_BASE_URL/analyze"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"titular": controller.text, "user_id": userId}),
-      );
+      final response = await http
+          .post(
+            Uri.parse("$API_BASE_URL/analyze"),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"titular": controller.text, "user_id": userId}),
+          )
+          .timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
+
+      if (data["resultado"]?["label"] == "Error: No tiene suficientes créditos") {
+        throw Exception("Error: No tiene suficientes créditos");
+      }
+
       setState(() {
         final resultado = data["resultado"] ?? {};
         score = (resultado["score"] ?? "").toString();
         label = (resultado["label"] ?? "").toString();
         fuentes = (resultado["fuentes"] ?? "").toString();
+        error = "";
+      });
+
+    } on TimeoutException catch (_) {
+      setState(() {
+        error = "El servidor tardó demasiado en responder. Intenta de nuevo.";
+      });
+    } on SocketException catch (_) {
+      setState(() {
+        error =
+            "No se pudo conectar al servidor. Verifica tu conexión a internet.";
+      });
+    } on FormatException catch (_) {
+      setState(() {
+        error = "Error en la respuesta del servidor.";
+      });
+    } on Exception catch (_) {
+      setState(() {
+        error = "Error: No tiene suficientes créditos";
+      });
+    } catch (e) {
+      setState(() {
+        error = "Error inesperado: ${e.toString()}";
       });
     } finally {
       if (mounted) {
@@ -130,6 +164,17 @@ class _HomePageState extends State<HomePage> {
                             onPressed: enviarTitular,
                             child: const Text("Analizar"),
                           ),
+                        if (error.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            error,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: secondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 20),
                         if (score.isNotEmpty ||
                             label.isNotEmpty ||
@@ -190,14 +235,6 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "Opciones",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18,
-                          color: Color(0xFF1D1D1B),
-                        ),
-                      ),
                       const SizedBox(height: 16),
                       InkWell(
                         onTap: () {

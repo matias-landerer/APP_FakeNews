@@ -91,20 +91,42 @@ def analyze():
     titular = data["titular"]
     user_id = data["user_id"]
 
-    resultado = verificar_titular(titular)
-
     conn = get_db()
     with conn.cursor() as cur:
         cur.execute(
-            "INSERT INTO consultas (user_id, titular, score, label) VALUES (%s, %s, %s, %s)",
-            (user_id, titular, resultado["score"], resultado["label"])
+            "SELECT creditos FROM users WHERE ID = %s",
+            (user_id,)
         )
-        conn.commit()
+        row = cur.fetchone()
     conn.close()
+    creditos = row[0]
 
-    return jsonify({
-        "resultado": resultado
-    })
+    if creditos > 0:
+        resultado = verificar_titular(titular)
+        conn = get_db()
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO consultas (user_id, titular, score, label) VALUES (%s, %s, %s, %s)",
+                (user_id, titular, resultado["score"], resultado["label"])
+            )
+            conn.commit()
+        conn.close()
+
+        conn = get_db()
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET creditos = creditos - 1 WHERE ID = %s", (user_id,)
+            )
+            conn.commit()
+        conn.close()
+
+        return jsonify({
+            "resultado": resultado
+        }), 200
+    else:
+        return jsonify({
+            "resultado": {"score": None, "label": "Error: No tiene suficientes créditos", "fuentes": None}
+        }), 401
 
 @app.route("/statistics", methods=["GET"])
 def show_stats():

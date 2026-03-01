@@ -5,7 +5,7 @@ CREATE TABLE users(
     username VARCHAR(255),
     email VARCHAR(255),
     clave VARCHAR(255),
-    is_premium BOOLEAN DEFAULT false
+    creditos INTEGER DEFAULT 20
 );
 
 CREATE TABLE consultas(
