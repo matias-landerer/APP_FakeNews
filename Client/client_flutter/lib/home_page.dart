@@ -48,7 +48,8 @@ class _HomePageState extends State<HomePage> {
 
       final data = jsonDecode(response.body);
 
-      if (data["resultado"]?["label"] == "Error: No tiene suficientes créditos") {
+      if (data["resultado"]?["label"] ==
+          "Error: No tiene suficientes créditos") {
         throw Exception("Error: No tiene suficientes créditos");
       }
 
@@ -59,7 +60,6 @@ class _HomePageState extends State<HomePage> {
         fuentes = (resultado["fuentes"] ?? "").toString();
         error = "";
       });
-
     } on TimeoutException catch (_) {
       setState(() {
         error = "El servidor tardó demasiado en responder. Intenta de nuevo.";
@@ -227,6 +227,12 @@ class _HomePageState extends State<HomePage> {
             child: Material(
               elevation: 10,
               color: Colors.white,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: SafeArea(
                 left: false,
                 right: false,
@@ -236,53 +242,41 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 16),
-                      InkWell(
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            "/statistics",
-                            arguments: userId,
-                          );
-                        },
-                        child: const Text(
-                          "Historial de consultas",
-                          style: TextStyle(
-                            color: secondary,
-                            decoration: TextDecoration.underline,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              "/statistics",
+                              arguments: userId,
+                            );
+                          },
+                          child: const Text("Historial de consultas"),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      InkWell(
-                        onTap: () {
-                          Navigator.pushNamed(context, "/info");
-                        },
-                        child: const Text(
-                          "Ir a info",
-                          style: TextStyle(
-                            color: secondary,
-                            decoration: TextDecoration.underline,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, "/info");
+                          },
+                          child: const Text("Ir a info"),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      InkWell(
-                        onTap: () {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            "/login",
-                            (route) => false,
-                          );
-                        },
-                        child: const Text(
-                          "Cerrar sesión",
-                          style: TextStyle(
-                            color: secondary,
-                            decoration: TextDecoration.underline,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              "/login",
+                              (route) => false,
+                            );
+                          },
+                          child: const Text("Cerrar sesión"),
                         ),
                       ),
                     ],
