@@ -8,7 +8,7 @@ app = Flask(__name__)
 @app.route("/login", methods = ["POST"])
 def login():
     data = request.json
-    username = data['username']
+    username_mail = data['username_mail']
     password = data['password']
 
     password = password.encode("utf-8")
@@ -17,13 +17,23 @@ def login():
     with conn.cursor() as cur:
         cur.execute(
             "SELECT id, clave FROM users WHERE username = %s",
-            (username,)
+            (username_mail,)
         )
         row = cur.fetchone()
     conn.close()
 
     if not row:
-        return jsonify({"status": "Usuario ingresado no existe."}), 401
+        conn = get_db()
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, clave FROM users WHERE email = %s",
+                (username_mail,)
+            )
+            row = cur.fetchone()
+        conn.close()
+
+        if not row:
+            return jsonify({"status": "Usuario ingresado no existe."}), 401
 
     hashed = row[1].encode("utf-8") if isinstance(row[1], str) else row[1]
     

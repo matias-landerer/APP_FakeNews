@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
             Uri.parse("$API_BASE_URL/login"),
             headers: {"Content-Type": "application/json"},
             body: jsonEncode({
-              "username": userController.text,
+              "username_mail": userController.text,
               "password": passController.text,
             }),
           )
@@ -124,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 20),
                     TextField(
                       controller: userController,
-                      decoration: const InputDecoration(labelText: "Usuario"),
+                      decoration: const InputDecoration(labelText: "Usuario o Email"),
                     ),
                     const SizedBox(height: 12),
                     TextField(
