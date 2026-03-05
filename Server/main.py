@@ -53,6 +53,9 @@ def register():
     password = data["password"]
     pass2 = data["pass2"]
 
+    if username == '' or email == '' or password == '' or pass2 == '':
+        return jsonify({"status": "Por favor, rellene todos los datos."}), 401
+
     conn = get_db()
     with conn.cursor() as cur:
         cur.execute(
@@ -64,6 +67,18 @@ def register():
 
     if row:
         return jsonify({"status": "El usuario ingresado ya ha sido usado."}), 401
+    
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT * FROM users WHERE email = %s",
+            (email,)
+        )
+        row = cur.fetchone()
+    conn.close()
+
+    if row:
+        return jsonify({"status": "El email ingresado ya ha sido usado."}), 401
 
     if password != pass2:
         return jsonify({"status": "Contraseñas No Coinciden"}), 401

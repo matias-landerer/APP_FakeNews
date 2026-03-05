@@ -21,11 +21,42 @@ class _RegisterPageState extends State<RegisterPage> {
 
   int userid = 0;
 
+  bool isValidEmail(String email) {
+  final emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+  );
+  return emailRegex.hasMatch(email);
+}
+
   Future<void> register() async {
     setState(() {
       loading = true;
       error = "";
     });
+
+    if (userController.text == '' || emailController.text == '' || passController.text == '' || pass2Controller.text == ''){
+      setState(() {
+        loading = false;
+        error = "Por favor, rellene todos los datos.";
+      });
+      return;
+    }
+    
+    if (!isValidEmail(emailController.text)) {
+      setState(() {
+        loading = false;
+        error = "Correo electrónico inválido.";
+      });
+      return;
+    }
+
+    if (passController.text != pass2Controller.text){
+      setState(() {
+        loading = false;
+        error = "Contraseñas no coinciden";
+      });
+      return;
+    }
 
     final response = await http.post(
       Uri.parse("$API_BASE_URL/register"),
