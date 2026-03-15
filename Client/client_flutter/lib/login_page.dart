@@ -27,6 +27,14 @@ class _LoginPageState extends State<LoginPage> {
       error = "";
     });
 
+    if (userController.text == '' || passController.text == ''){
+      setState(() {
+        loading = false;
+        error = "Por favor, rellene todos los datos.";
+      });
+      return;
+    }
+
     try {
       final response = await http
           .post(

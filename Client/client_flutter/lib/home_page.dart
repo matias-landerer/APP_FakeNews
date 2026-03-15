@@ -37,6 +37,14 @@ class _HomePageState extends State<HomePage> {
       error = "";
     });
 
+    if (controller.text == ''){
+      setState(() {
+        loading = false;
+        error = "Debe ingresar algún titular.";
+      });
+      return;
+    }
+
     try {
       final response = await http
           .post(

@@ -11,6 +11,9 @@ def login():
     username_mail = data['username_mail']
     password = data['password']
 
+    if username_mail == ''or password == '':
+        return jsonify({"status": "Por favor, rellene todos los datos."}), 401
+
     password = password.encode("utf-8")
 
     conn = get_db()
