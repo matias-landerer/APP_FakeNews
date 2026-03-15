@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'parametros.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -27,6 +29,16 @@ class _RegisterPageState extends State<RegisterPage> {
   );
   return emailRegex.hasMatch(email);
 }
+  String passwordError(String password) {
+  if (password.length < 8)              return 'Mínimo 8 caracteres';
+  if (!RegExp(r'[a-z]').hasMatch(password)) return 'Debe incluir una minúscula';
+  if (!RegExp(r'[A-Z]').hasMatch(password)) return 'Debe incluir una mayúscula';
+  if (!RegExp(r'\d').hasMatch(password))    return 'Debe incluir un número';
+  if (!RegExp(r'[!@#$%^&*(),.?":{}|<>_-]').hasMatch(password)) {
+    return 'Debe incluir un símbolo';
+  }
+  return "";
+}
 
   Future<void> register() async {
     setState(() {
@@ -50,6 +62,14 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
+    error = passwordError(passController.text);
+    if (error != ""){
+      setState(() {
+        loading = false;
+      });
+      return;
+    }
+    
     if (passController.text != pass2Controller.text){
       setState(() {
         loading = false;
@@ -58,29 +78,52 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    final response = await http.post(
-      Uri.parse("$API_BASE_URL/register"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "username": userController.text,
-        "email": emailController.text,
-        "password": passController.text,
-        "pass2": pass2Controller.text,
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse("$API_BASE_URL/register"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "username": userController.text,
+          "email": emailController.text,
+          "password": passController.text,
+          "pass2": pass2Controller.text,
+        }),
+      );
 
-    final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body);
 
-    setState(() {
-      loading = false;
-    });
-
-    if (data["status"] == "RegistroExitoso") {
-      userid = data["user_id"];
-      Navigator.pushReplacementNamed(context, "/home", arguments: userid);
-    } else {
       setState(() {
-        error = data["status"];
+        loading = false;
+      });
+
+      if (data["status"] == "RegistroExitoso") {
+        userid = data["user_id"];
+        Navigator.pushReplacementNamed(context, "/home", arguments: userid);
+      } else {
+        setState(() {
+          error = data["status"];
+        });
+      }
+    } on TimeoutException catch (_) {
+      setState(() {
+        loading = false;
+        error = "El servidor tardó demasiado en responder. Intenta de nuevo.";
+      });
+    } on SocketException catch (_) {
+      setState(() {
+        loading = false;
+        error =
+            "No se pudo conectar al servidor. Verifica tu conexión a internet.";
+      });
+    } on FormatException catch (_) {
+      setState(() {
+        loading = false;
+        error = "Error en la respuesta del servidor.";
+      });
+    } catch (e) {
+      setState(() {
+        loading = false;
+        error = "Error inesperado: ${e.toString()}";
       });
     }
   }

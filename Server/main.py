@@ -2,6 +2,7 @@ import bcrypt
 from API import verificar_titular
 from conexionBDD import get_db
 from flask import Flask, request, jsonify
+from funciones_extra import password_error, isvalidEmail
 
 app = Flask(__name__)
 
@@ -59,6 +60,13 @@ def register():
     if username == '' or email == '' or password == '' or pass2 == '':
         return jsonify({"status": "Por favor, rellene todos los datos."}), 401
 
+    if not isvalidEmail(email):
+        return jsonify({"status": "Correo electrónico inválido."}), 401
+    
+    pass_error = password_error(password)
+    if (pass_error is not None):
+        return jsonify({"status": pass_error}), 401
+    
     conn = get_db()
     with conn.cursor() as cur:
         cur.execute(
