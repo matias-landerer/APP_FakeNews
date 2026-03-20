@@ -4,6 +4,7 @@ import 'dart:io';
 import 'parametros.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,7 +27,7 @@ class _HomePageState extends State<HomePage> {
   final controller = TextEditingController();
   String score = "";
   String label = "";
-  String fuentes = "";
+  List<String> fuentes = [];
   String error = "";
   bool loading = false;
   bool showOptions = false;
@@ -65,7 +66,14 @@ class _HomePageState extends State<HomePage> {
         final resultado = data["resultado"] ?? {};
         score = (resultado["score"] ?? "").toString();
         label = (resultado["label"] ?? "").toString();
-        fuentes = (resultado["fuentes"] ?? "").toString();
+        
+        final fuentesData = resultado["fuentes"];
+        if (fuentesData is List) {
+          fuentes = fuentesData.map((e) => e.toString().trim()).toList();
+        } else {
+          fuentes = [];
+        }
+        
         error = "";
       });
     } on TimeoutException catch (_) {
@@ -200,7 +208,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "La noticia es '$score' real",
+                                  "La noticia es $score real",
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
@@ -213,8 +221,33 @@ class _HomePageState extends State<HomePage> {
                                   "Fuentes:",
                                   style: TextStyle(fontWeight: FontWeight.w700),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(fuentes),
+                                const SizedBox(height: 8),
+                                ...fuentes.map((fuente) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: InkWell(
+                                    onTap: () async {
+                                      final url = Uri.parse(fuente);
+                                      if (await canLaunchUrl(url)) {
+                                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                                      }
+                                    },
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text("• ", style: TextStyle(fontSize: 16)),
+                                        Expanded(
+                                          child: Text(
+                                            fuente,
+                                            style: const TextStyle(
+                                              color: Color(0xFF2196F3),
+                                              decoration: TextDecoration.underline,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )),
                               ],
                             ),
                           ),

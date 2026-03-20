@@ -14,7 +14,7 @@ def verificar_titular(titular: str) -> dict:
         resultado = chat_completion.choices[0].message.content.split(';')
         score = resultado[0]
         label = resultado[1]
-        fuentes = resultado[2]
+        fuentes = resultado[2].split(',')
 
         return {"score": score, "label": label, "fuentes": fuentes}
     except Exception as error:
@@ -27,7 +27,8 @@ if __name__ == '__main__':
     print()
     print(resultado["label"])
     print("\nFuentes:")
-    print(resultado["fuentes"])
+    for fuente in resultado["fuentes"]:
+        print(fuente)
 
 '''
 import parametros
