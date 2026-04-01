@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
       error = "";
     });
 
-    if (controller.text == ''){
+    if (controller.text == '') {
       setState(() {
         loading = false;
         error = "Debe ingresar algún titular.";
@@ -66,14 +66,14 @@ class _HomePageState extends State<HomePage> {
         final resultado = data["resultado"] ?? {};
         score = (resultado["score"] ?? "").toString();
         label = (resultado["label"] ?? "").toString();
-        
+
         final fuentesData = resultado["fuentes"];
         if (fuentesData is List) {
           fuentes = fuentesData.map((e) => e.toString().trim()).toList();
         } else {
           fuentes = [];
         }
-        
+
         error = "";
       });
     } on TimeoutException catch (_) {
@@ -222,32 +222,67 @@ class _HomePageState extends State<HomePage> {
                                   style: TextStyle(fontWeight: FontWeight.w700),
                                 ),
                                 const SizedBox(height: 8),
-                                ...fuentes.map((fuente) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 6),
-                                  child: InkWell(
-                                    onTap: () async {
-                                      final url = Uri.parse(fuente);
-                                      if (await canLaunchUrl(url)) {
-                                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                                      }
-                                    },
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text("• ", style: TextStyle(fontSize: 16)),
-                                        Expanded(
-                                          child: Text(
-                                            fuente,
-                                            style: const TextStyle(
-                                              color: Color(0xFF2196F3),
-                                              decoration: TextDecoration.underline,
-                                            ),
+                                ...fuentes.map(
+                                  (fuente) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(8),
+                                        overlayColor:
+                                            WidgetStateProperty.resolveWith((
+                                              states,
+                                            ) {
+                                              if (states.contains(
+                                                WidgetState.pressed,
+                                              )) {
+                                                return Colors.black.withValues(
+                                                  alpha: 0.10,
+                                                );
+                                              }
+                                              return null;
+                                            }),
+                                        onTap: () async {
+                                          final url = Uri.parse(fuente);
+                                          if (await canLaunchUrl(url)) {
+                                            await launchUrl(
+                                              url,
+                                              mode: LaunchMode
+                                                  .externalApplication,
+                                            );
+                                          }
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 4,
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "• ",
+                                                style: TextStyle(fontSize: 16),
+                                              ),
+                                              Expanded(
+                                                child: Text(
+                                                  fuente,
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF2196F3),
+                                                    decoration: TextDecoration
+                                                        .underline,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ),
-                                )),
+                                ),
                               ],
                             ),
                           ),
@@ -269,9 +304,7 @@ class _HomePageState extends State<HomePage> {
               elevation: 10,
               color: Colors.white,
               shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                ),
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(24)),
               ),
               clipBehavior: Clip.antiAlias,
               child: SafeArea(
