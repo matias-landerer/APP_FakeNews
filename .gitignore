@@ -18,6 +18,10 @@ windows/
 analysis_options.yaml
 pubspec.lock
 pubspec.yaml
+
+# Flutter - excepciones: archivos modificados o necesarios para el build
+!Client/client_flutter/pubspec.yaml
+!Client/client_flutter/android/
 Client/client_flutter/README.md
 Client/client_flutter/.gitignore
 parametros.dart
