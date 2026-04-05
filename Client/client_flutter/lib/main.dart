@@ -4,13 +4,17 @@ import 'home_page.dart';
 import 'register_page.dart';
 import 'show_data.dart';
 import 'info.dart';
+import 'session.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final userId = await getSession();
+  runApp(MyApp(initialUserId: userId));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final int? initialUserId;
+  const MyApp({super.key, this.initialUserId});
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +85,18 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: "/login",
+      initialRoute: initialUserId != null ? "/home" : "/login",
+      onGenerateInitialRoutes: initialUserId != null
+          ? (route) => [
+                MaterialPageRoute(
+                  builder: (_) => const HomePage(),
+                  settings: RouteSettings(
+                    name: "/home",
+                    arguments: initialUserId,
+                  ),
+                ),
+              ]
+          : null,
       routes: {
         "/login": (context) => const LoginPage(),
         "/home": (context) => const HomePage(),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'parametros.dart';
+import 'session.dart'; // ← agregar
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -98,6 +99,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (data["status"] == "RegistroExitoso") {
         userid = data["user_id"];
+        await saveSession(userid);
         Navigator.pushReplacementNamed(context, "/home", arguments: userid);
       } else {
         setState(() {

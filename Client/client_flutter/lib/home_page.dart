@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'parametros.dart';
+import 'session.dart'; // ← agregar
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -343,7 +344,8 @@ class _HomePageState extends State<HomePage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
+                            await clearSession();
                             Navigator.pushNamedAndRemoveUntil(
                               context,
                               "/login",

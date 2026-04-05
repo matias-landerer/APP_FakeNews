@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'parametros.dart';
+import 'session.dart'; // ← agregar
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -55,6 +56,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (data["status"] == "InicioExitoso") {
         userid = data["user_id"];
+        await saveSession(userid);  // ← agregar
         Navigator.pushReplacementNamed(context, "/home", arguments: userid);
       } else {
         setState(() {
