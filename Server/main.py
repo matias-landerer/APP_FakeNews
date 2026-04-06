@@ -164,6 +164,22 @@ def analyze():
             "resultado": {"score": None, "label": "Error: No tiene suficientes créditos", "fuentes": None}
         }), 401
 
+@app.route("/user/<int:user_id>", methods=["GET"])
+def get_user(user_id):
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT username, creditos FROM users WHERE ID = %s",
+            (user_id,)
+        )
+        row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return jsonify({"status": "Usuario no encontrado"}), 404
+
+    return jsonify({"username": row[0], "creditos": row[1]}), 200
+
 @app.route("/statistics", methods=["GET"])
 def show_stats():
     data = request.json

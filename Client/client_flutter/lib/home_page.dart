@@ -22,7 +22,26 @@ class _HomePageState extends State<HomePage> {
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is int) {
       userId = args;
+      _fetchUserInfo();
     }
+  }
+
+  Future<void> _fetchUserInfo() async {
+    if (userId == null) return;
+    try {
+      final response = await http
+          .get(Uri.parse("$API_BASE_URL/user/$userId"))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            username = data["username"] ?? "";
+            creditos = data["creditos"] ?? 0;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   final controller = TextEditingController();
@@ -32,6 +51,8 @@ class _HomePageState extends State<HomePage> {
   String error = "";
   bool loading = false;
   bool showOptions = false;
+  String username = "";
+  int creditos = 0;
 
   Future<void> enviarTitular() async {
     setState(() {
@@ -77,6 +98,7 @@ class _HomePageState extends State<HomePage> {
 
         error = "";
       });
+      _fetchUserInfo();
     } on TimeoutException catch (_) {
       setState(() {
         error = "El servidor tardó demasiado en responder. Intenta de nuevo.";
@@ -355,6 +377,40 @@ class _HomePageState extends State<HomePage> {
                           child: const Text("Cerrar sesión"),
                         ),
                       ),
+                      const Spacer(),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.person, size: 18, color: Color(0xFF6C6C66)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              username.isNotEmpty ? username : "...",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(Icons.monetization_on_outlined, size: 18, color: Color(0xFF6C6C66)),
+                          const SizedBox(width: 8),
+                          Text(
+                            "$creditos créditos",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6C6C66),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),

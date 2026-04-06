@@ -25,3 +25,5 @@ pubspec.yaml
 Client/client_flutter/README.md
 Client/client_flutter/.gitignore
 parametros.dart
+
+fake_news_app_context.md
