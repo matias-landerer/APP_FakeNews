@@ -98,9 +98,29 @@ class _RegisterPageState extends State<RegisterPage> {
       });
 
       if (data["status"] == "RegistroExitoso") {
-        userid = data["user_id"];
-        await saveSession(userid);
-        Navigator.pushReplacementNamed(context, "/home", arguments: userid);
+        // Mostrar pantalla/diálogo informativo en vez de ir al home
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => AlertDialog(
+              title: const Text("Revisa tu correo"),
+              content: const Text(
+                "Te enviamos un link de verificación. "
+                "Abre tu email y haz click en el enlace para activar tu cuenta.",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.pushReplacementNamed(context, "/login");
+                  },
+                  child: const Text("Ir a iniciar sesión"),
+                ),
+              ],
+            ),
+          );
+        }
       } else {
         setState(() {
           error = data["status"];

@@ -5,7 +5,9 @@ CREATE TABLE users(
     username VARCHAR(255),
     email VARCHAR(255),
     clave VARCHAR(255),
-    creditos INTEGER DEFAULT 20
+    creditos INTEGER DEFAULT 20,
+    verified BOOLEAN DEFAULT FALSE,
+    verify_token VARCHAR(64)
 );
 
 CREATE TABLE consultas(
