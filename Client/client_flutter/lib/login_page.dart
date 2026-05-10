@@ -22,6 +22,107 @@ class _LoginPageState extends State<LoginPage> {
 
   int userid = 0;
 
+  void _showForgotPasswordDialog() {
+    final emailCtrl = TextEditingController();
+    String dialogError = '';
+    String dialogSuccess = '';
+    bool dialogLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            title: const Text('Restablecer contraseña'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Ingresa tu email y te enviaremos un enlace para cambiar tu contraseña.',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF555555)),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                if (dialogError.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    dialogError,
+                    style: const TextStyle(color: Color(0xFFEF342A), fontSize: 13),
+                  ),
+                ],
+                if (dialogSuccess.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    dialogSuccess,
+                    style: const TextStyle(color: Colors.green, fontSize: 13),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancelar'),
+              ),
+              if (dialogLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFEF342A),
+                    ),
+                  ),
+                )
+              else
+                ElevatedButton(
+                  onPressed: dialogSuccess.isNotEmpty
+                      ? null
+                      : () async {
+                          if (emailCtrl.text.trim().isEmpty) {
+                            setDialogState(() => dialogError = 'Por favor, ingresa tu email.');
+                            return;
+                          }
+                          setDialogState(() {
+                            dialogLoading = true;
+                            dialogError = '';
+                          });
+                          try {
+                            final response = await http
+                                .post(
+                                  Uri.parse('$API_BASE_URL/forgot-password'),
+                                  headers: {'Content-Type': 'application/json'},
+                                  body: jsonEncode({'email': emailCtrl.text.trim()}),
+                                )
+                                .timeout(const Duration(seconds: 10));
+                            final data = jsonDecode(response.body);
+                            setDialogState(() {
+                              dialogLoading = false;
+                              dialogSuccess = data['status'];
+                            });
+                          } catch (_) {
+                            setDialogState(() {
+                              dialogLoading = false;
+                              dialogError = 'No se pudo conectar al servidor.';
+                            });
+                          }
+                        },
+                  child: const Text('Enviar'),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> login() async {
     setState(() {
       loading = true;
@@ -160,6 +261,10 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.pushReplacementNamed(context, "/register");
                       },
                       child: const Text("Crear cuenta"),
+                    ),
+                    TextButton(
+                      onPressed: _showForgotPasswordDialog,
+                      child: const Text("¿Olvidaste tu contraseña?"),
                     ),
                     if (error.isNotEmpty) ...[
                       const SizedBox(height: 10),

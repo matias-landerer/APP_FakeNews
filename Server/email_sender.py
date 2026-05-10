@@ -61,3 +61,33 @@ def send_login_alert_email(to_email: str, username: str, revoke_token: str):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(parametros.EMAIL_SENDER, parametros.EMAIL_PASSWORD)
         server.sendmail(parametros.EMAIL_SENDER, to_email, msg.as_string())
+
+
+def send_password_reset_email(to_email: str, token: str):
+    link = f"{parametros.APP_BASE_URL}/reset-password?token={token}"
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Restablecer contraseña – Fake News Detector"
+    msg["From"] = parametros.EMAIL_SENDER
+    msg["To"] = to_email
+
+    html = f"""
+    <html><body>
+      <h2>Restablecer contraseña</h2>
+      <p>Recibimos una solicitud para cambiar la contraseña de tu cuenta en <b>Fake News Detector</b>.</p>
+      <p>Haz click en el siguiente enlace para crear una nueva contraseña. El enlace expira en <b>1 hora</b>.</p>
+      <a href="{link}" style="
+        display:inline-block; background:#EF342A; color:white; padding:12px 24px;
+        border-radius:8px; text-decoration:none; font-weight:bold; margin:12px 0;
+      ">Cambiar contraseña</a>
+      <p style="color:#999; margin-top:24px; font-size:12px;">
+        Si no solicitaste este cambio, puedes ignorar este mensaje. Tu contraseña no será modificada.
+      </p>
+    </body></html>
+    """
+
+    msg.attach(MIMEText(html, "html"))
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(parametros.EMAIL_SENDER, parametros.EMAIL_PASSWORD)
+        server.sendmail(parametros.EMAIL_SENDER, to_email, msg.as_string())

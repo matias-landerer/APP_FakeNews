@@ -9,7 +9,9 @@ CREATE TABLE users(
     verified BOOLEAN DEFAULT FALSE,
     verify_token VARCHAR(64),
     revoke_token VARCHAR(64),
-    session_revoked BOOLEAN DEFAULT FALSE
+    session_revoked BOOLEAN DEFAULT FALSE,
+    reset_token VARCHAR(64),
+    reset_token_expiry TIMESTAMP
 );
 
 CREATE TABLE consultas(
