@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'parametros.dart';
-import 'session.dart'; // ← agregar
+import 'session.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -78,6 +78,15 @@ class _HomePageState extends State<HomePage> {
           .timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
+
+      if (response.statusCode == 401 &&
+          (data["status"] as String? ?? "").contains("revocada")) {
+        await clearSession();
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, "/login", (r) => false);
+        }
+        return;
+      }
 
       if (data["resultado"]?["label"] ==
           "Error: No tiene suficientes créditos") {

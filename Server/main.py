@@ -2,7 +2,7 @@ import secrets
 import bcrypt
 from API import verificar_titular
 from conexionBDD import get_db
-from email_sender import send_verification_email
+from email_sender import send_verification_email, send_login_alert_email
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from funciones_extra import password_error, isvalidEmail
@@ -24,7 +24,7 @@ def login():
     conn = get_db()
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT id, clave, verified FROM users WHERE username = %s",
+            "SELECT id, clave, verified, email, username FROM users WHERE username = %s",
             (username_mail,)
         )
         row = cur.fetchone()
@@ -34,7 +34,7 @@ def login():
         conn = get_db()
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, clave, verified FROM users WHERE email = %s",
+                "SELECT id, clave, verified, email, username FROM users WHERE email = %s",
                 (username_mail,)
             )
             row = cur.fetchone()
@@ -48,13 +48,29 @@ def login():
     if not bcrypt.checkpw(password, hashed):
         return jsonify({"status": "Contraseña incorrecta"}), 401
 
-    # ← Bloquear login si no verificó el mail
     if not row[2]:
         return jsonify({"status": "Debes verificar tu correo antes de iniciar sesión."}), 401
 
+    user_id, user_email, username = row[0], row[3], row[4]
+    revoke_token = secrets.token_urlsafe(32)
+
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE users SET revoke_token = %s, session_revoked = FALSE WHERE id = %s",
+            (revoke_token, user_id)
+        )
+        conn.commit()
+    conn.close()
+
+    try:
+        send_login_alert_email(user_email, username, revoke_token)
+    except Exception as e:
+        print(f"Error enviando email de alerta: {e}")
+
     return jsonify({
         "status": "InicioExitoso",
-        "user_id": row[0]
+        "user_id": user_id
     }), 200
 
 
@@ -156,6 +172,45 @@ def verify_email():
     return "<h2>✅ Cuenta verificada. Ya puedes iniciar sesión en la app.</h2>", 200
 
 
+@app.route("/revoke-session", methods=["GET"])
+def revoke_session():
+    token = request.args.get("token")
+
+    if not token:
+        return "<h2>Enlace inválido.</h2>", 400
+
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT id FROM users WHERE revoke_token = %s AND session_revoked = FALSE",
+            (token,)
+        )
+        row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return "<h2>El enlace ya fue usado o es inválido.</h2>", 400
+
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE users SET session_revoked = TRUE, revoke_token = NULL WHERE id = %s",
+            (row[0],)
+        )
+        conn.commit()
+    conn.close()
+
+    return """
+    <html><body style="font-family:sans-serif; max-width:480px; margin:60px auto; text-align:center;">
+      <h2>✅ Sesión cerrada</h2>
+      <p>La sesión ha sido cerrada correctamente.</p>
+      <p style="color:#999; font-size:13px;">
+        Si no reconoces este acceso, te recomendamos cambiar tu contraseña lo antes posible.
+      </p>
+    </body></html>
+    """, 200
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     data = request.json
@@ -164,10 +219,13 @@ def analyze():
 
     conn = get_db()
     with conn.cursor() as cur:
-        cur.execute("SELECT creditos FROM users WHERE ID = %s", (user_id,))
+        cur.execute("SELECT creditos, session_revoked FROM users WHERE ID = %s", (user_id,))
         row = cur.fetchone()
     conn.close()
-    creditos = row[0]
+    creditos, session_revoked = row[0], row[1]
+
+    if session_revoked:
+        return jsonify({"status": "Sesión revocada. Por favor, vuelve a iniciar sesión."}), 401
 
     if creditos > 0:
         resultado = verificar_titular(titular)
