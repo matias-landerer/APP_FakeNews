@@ -4,9 +4,11 @@ from API import verificar_titular
 from conexionBDD import get_db
 from email_sender import send_verification_email
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from funciones_extra import password_error, isvalidEmail
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/login", methods=["POST"])
 def login():

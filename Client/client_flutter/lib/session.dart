@@ -1,6 +1,8 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-const _storage = FlutterSecureStorage();
+const _storage = FlutterSecureStorage(
+  webOptions: WebOptions(dbName: 'fakenews', publicKey: 'fakenews_key'),
+);
 const _key = 'user_id';
 
 Future<void> saveSession(int userId) async {
