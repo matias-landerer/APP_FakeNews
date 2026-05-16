@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'parametros.dart';
-import 'session.dart'; // ← agregar
+import 'session.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
