@@ -23,15 +23,10 @@ class _ShowDataPageState extends State<ShowDataPage> {
     });
 
     try {
-      final request = http.Request(
-        "GET",
-        Uri.parse("$API_BASE_URL/statistics"),
+      final uri = Uri.parse("$API_BASE_URL/statistics").replace(
+        queryParameters: {"id": userId.toString()},
       );
-      request.headers["Content-Type"] = "application/json";
-      request.body = jsonEncode({"id": userId});
-
-      final streamed = await request.send();
-      final response = await http.Response.fromStream(streamed);
+      final response = await http.get(uri);
 
       if (response.statusCode >= 400) {
         setState(() {

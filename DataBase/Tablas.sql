@@ -7,7 +7,11 @@ CREATE TABLE users(
     clave VARCHAR(255),
     creditos INTEGER DEFAULT 20,
     verified BOOLEAN DEFAULT FALSE,
-    verify_token VARCHAR(64)
+    verify_token VARCHAR(64),
+    revoke_token VARCHAR(64),
+    session_revoked BOOLEAN DEFAULT FALSE,
+    reset_token VARCHAR(64),
+    reset_token_expiry TIMESTAMP
 );
 
 CREATE TABLE consultas(
