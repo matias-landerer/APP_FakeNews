@@ -372,8 +372,9 @@ def reset_password():
 
 @app.route("/statistics", methods=["GET"])
 def show_stats():
-    data = request.json
-    user_id = data['id']
+    user_id = request.args.get('id', type=int)
+    if user_id is None:
+        return jsonify({"error": "id requerido"}), 400
 
     conn = get_db()
     with conn.cursor() as cur:
