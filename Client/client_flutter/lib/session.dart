@@ -5,13 +5,12 @@ const _storage = FlutterSecureStorage(
 );
 const _key = 'user_id';
 
-Future<void> saveSession(int userId) async {
-  await _storage.write(key: _key, value: userId.toString());
+Future<void> saveSession(String userId) async {
+  await _storage.write(key: _key, value: userId);
 }
 
-Future<int?> getSession() async {
-  final value = await _storage.read(key: _key);
-  return value != null ? int.tryParse(value) : null;
+Future<String?> getSession() async {
+  return await _storage.read(key: _key);
 }
 
 Future<void> clearSession() async {

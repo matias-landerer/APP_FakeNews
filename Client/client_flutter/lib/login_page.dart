@@ -20,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   String error = "";
   bool loading = false;
 
-  int userid = 0;
+  String userid = "";
 
   void _showForgotPasswordDialog() {
     final emailCtrl = TextEditingController();
@@ -156,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       if (data["status"] == "InicioExitoso") {
-        userid = data["user_id"];
+        userid = data["user_id"].toString();
         await saveSession(userid);
         Navigator.pushReplacementNamed(context, "/home", arguments: userid);
       } else {

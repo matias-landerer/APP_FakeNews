@@ -13,10 +13,10 @@ class _ShowDataPageState extends State<ShowDataPage> {
   bool loading = false;
   String error = "";
   bool autoLoaded = false;
-  int? userId;
+  String? userId;
   List<List<dynamic>> rows = [];
 
-  Future<void> showData(int userId) async {
+  Future<void> showData(String userId) async {
     setState(() {
       loading = true;
       error = "";
@@ -62,15 +62,9 @@ class _ShowDataPageState extends State<ShowDataPage> {
     autoLoaded = true;
     final args = ModalRoute.of(context)?.settings.arguments;
 
-    if (args is int) {
+    if (args is String) {
       userId = args;
       showData(args);
-    } else if (args is String) {
-      final parsed = int.tryParse(args);
-      if (parsed != null) {
-        userId = parsed;
-        showData(parsed);
-      }
     } else {
       setState(() {
         error = "No se recibió ID de usuario.";
