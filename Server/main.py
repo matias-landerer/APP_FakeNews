@@ -256,7 +256,7 @@ def analyze():
         }), 401
 
 
-@app.route("/user/<int:user_id>", methods=["GET"])
+@app.route("/user/<user_id>", methods=["GET"])
 def get_user(user_id):
     conn = get_db()
     with conn.cursor() as cur:
@@ -372,7 +372,7 @@ def reset_password():
 
 @app.route("/statistics", methods=["GET"])
 def show_stats():
-    user_id = request.args.get('id', type=int)
+    user_id = request.args.get('id', type=str)
     if user_id is None:
         return jsonify({"error": "id requerido"}), 400
 
