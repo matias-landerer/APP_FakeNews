@@ -1,12 +1,14 @@
 import secrets
 import bcrypt
+import jwt
+import parametros
 from datetime import datetime, timedelta, timezone
 from API import verificar_titular
 from conexionBDD import get_db
 from email_sender import send_verification_email, send_login_alert_email, send_password_reset_email
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from funciones_extra import password_error, isvalidEmail
+from funciones_extra import password_error, isvalidEmail, get_current_user
 from reset_password_html import RESET_PASSWORD_HTML
 
 
@@ -71,9 +73,18 @@ def login():
     except Exception as e:
         print(f"Error enviando email de alerta: {e}")
 
+    token = jwt.encode(
+        {
+            "user_id": str(user_id),
+            "exp": datetime.now(timezone.utc) + timedelta(days=30)
+        },
+        parametros.JWT_SECRET,
+        algorithm="HS256"
+    )
+    
     return jsonify({
         "status": "InicioExitoso",
-        "user_id": user_id
+        "token": token
     }), 200
 
 
@@ -218,7 +229,9 @@ def revoke_session():
 def analyze():
     data = request.json
     titular = data["titular"]
-    user_id = data["user_id"]
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({"status": "No autorizado."}), 401
 
     conn = get_db()
     with conn.cursor() as cur:
@@ -256,8 +269,12 @@ def analyze():
         }), 401
 
 
-@app.route("/user/<int:user_id>", methods=["GET"])
-def get_user(user_id):
+@app.route("/user/me", methods=["GET"])
+def get_user():
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({"status": "No autorizado."}), 401
+
     conn = get_db()
     with conn.cursor() as cur:
         cur.execute("SELECT username, creditos FROM users WHERE ID = %s", (user_id,))
@@ -372,9 +389,9 @@ def reset_password():
 
 @app.route("/statistics", methods=["GET"])
 def show_stats():
-    user_id = request.args.get('id', type=int)
-    if user_id is None:
-        return jsonify({"error": "id requerido"}), 400
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({"error": "No autorizado."}), 400
 
     conn = get_db()
     with conn.cursor() as cur:

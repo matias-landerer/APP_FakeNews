@@ -13,7 +13,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  final int? initialUserId;
+  final String? initialUserId;
   const MyApp({super.key, this.initialUserId});
 
   @override
