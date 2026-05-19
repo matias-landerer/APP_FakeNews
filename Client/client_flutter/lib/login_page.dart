@@ -156,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       if (data["status"] == "InicioExitoso") {
-        userid = data["user_id"].toString();
+        userid = data["token"].toString();
         await saveSession(userid);
         Navigator.pushReplacementNamed(context, "/home", arguments: userid);
       } else {

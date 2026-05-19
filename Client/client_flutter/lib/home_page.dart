@@ -30,8 +30,9 @@ class _HomePageState extends State<HomePage> {
     if (userId == null) return;
     try {
       final response = await http
-          .get(Uri.parse("$API_BASE_URL/user/$userId"))
-          .timeout(const Duration(seconds: 10));
+          .get(Uri.parse("$API_BASE_URL/user/me"),
+          headers: {"Authorization": "Bearer $userId"},
+          ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
@@ -72,8 +73,11 @@ class _HomePageState extends State<HomePage> {
       final response = await http
           .post(
             Uri.parse("$API_BASE_URL/analyze"),
-            headers: {"Content-Type": "application/json"},
-            body: jsonEncode({"titular": controller.text, "user_id": userId}),
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer $userId",
+              },
+            body: jsonEncode({"titular": controller.text}),
           )
           .timeout(const Duration(seconds: 10));
 

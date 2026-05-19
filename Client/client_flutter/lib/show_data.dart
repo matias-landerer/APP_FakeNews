@@ -23,10 +23,10 @@ class _ShowDataPageState extends State<ShowDataPage> {
     });
 
     try {
-      final uri = Uri.parse("$API_BASE_URL/statistics").replace(
-        queryParameters: {"id": userId.toString()},
+      final response = await http.get(
+          Uri.parse("$API_BASE_URL/statistics"),
+          headers: {"Authorization": "Bearer $userId"},
       );
-      final response = await http.get(uri);
 
       if (response.statusCode >= 400) {
         setState(() {
