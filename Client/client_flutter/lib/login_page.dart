@@ -22,6 +22,38 @@ class _LoginPageState extends State<LoginPage> {
 
   String userid = "";
 
+  int _wrongPasswordAttempts = 0;
+  static const int _maxAttempts = 5;
+  static const int _lockoutSeconds = 15;
+  int _lockoutSecondsLeft = 0;
+  Timer? _lockoutTimer;
+
+  bool get _isLockedOut => _lockoutSecondsLeft > 0;
+
+  void _startLockout() {
+    setState(() {
+      _lockoutSecondsLeft = _lockoutSeconds;
+      error = "";
+    });
+    _lockoutTimer?.cancel();
+    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+      setState(() { _lockoutSecondsLeft--; });
+      if (_lockoutSecondsLeft <= 0) {
+        timer.cancel();
+        setState(() { _wrongPasswordAttempts = 0; });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _lockoutTimer?.cancel();
+    userController.dispose();
+    passController.dispose();
+    super.dispose();
+  }
+
   void _showForgotPasswordDialog() {
     final emailCtrl = TextEditingController();
     String dialogError = '';
@@ -159,6 +191,15 @@ class _LoginPageState extends State<LoginPage> {
         userid = data["token"].toString();
         await saveSession(userid);
         Navigator.pushReplacementNamed(context, "/home", arguments: userid);
+      } else if (data["status"] == "Contraseña incorrecta") {
+        _wrongPasswordAttempts++;
+        if (_wrongPasswordAttempts >= _maxAttempts) {
+          _startLockout();
+        } else {
+          setState(() {
+            error = "Contraseña incorrecta. Intento $_wrongPasswordAttempts/$_maxAttempts.";
+          });
+        }
       } else {
         setState(() {
           error = data["status"];
@@ -249,8 +290,23 @@ class _LoginPageState extends State<LoginPage> {
                     if (loading)
                       const Center(
                         child: CircularProgressIndicator(color: secondary),
-                      ),
-                    if (!loading)
+                      )
+                    else if (_isLockedOut)
+                      Column(
+                        children: [
+                          ElevatedButton(
+                            onPressed: null,
+                            child: Text("Espera $_lockoutSecondsLeft s"),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Demasiados intentos fallidos.\nIntenta de nuevo en unos segundos.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: secondary, fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                        ],
+                      )
+                    else
                       ElevatedButton(
                         onPressed: login,
                         child: const Text("Entrar"),
@@ -266,7 +322,7 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: _showForgotPasswordDialog,
                       child: const Text("¿Olvidaste tu contraseña?"),
                     ),
-                    if (error.isNotEmpty) ...[
+                    if (error.isNotEmpty && !_isLockedOut) ...[
                       const SizedBox(height: 10),
                       Text(
                         error,
