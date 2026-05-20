@@ -1,7 +1,8 @@
+import parametros
 import secrets
 import bcrypt
 import jwt
-import parametros
+import redis
 from datetime import datetime, timedelta, timezone
 from API import verificar_titular
 from conexionBDD import get_db
@@ -11,6 +12,8 @@ from flask_cors import CORS
 from funciones_extra import password_error, isvalidEmail, get_current_user
 from reset_password_html import RESET_PASSWORD_HTML
 
+
+r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 app = Flask(__name__)
 CORS(app)
@@ -50,13 +53,28 @@ def login():
 
     hashed = row[1].encode("utf-8") if isinstance(row[1], str) else row[1]
 
-    if not bcrypt.checkpw(password, hashed):
-        return jsonify({"status": "Contraseña incorrecta"}), 401
-
     if not row[2]:
         return jsonify({"status": "Debes verificar tu correo antes de iniciar sesión."}), 401
 
     user_id, user_email, username = row[0], row[3], row[4]
+
+    lock_key = f"lock:{user_id}"
+    attempts_key = f"attempts:{user_id}"
+
+    if r.exists(lock_key):
+        ttl = r.ttl(lock_key)
+        return jsonify({"status": f"Cuenta bloqueada temporalmente. Intenta en {ttl}s."}), 429
+    
+    if not bcrypt.checkpw(password, hashed):
+        attempts = r.incr(attempts_key)
+        r.expire(attempts_key, 120)
+        if attempts >= parametros.LOCKOUT_MAX_ATTEMPTS:
+            r.setex(lock_key, parametros.LOCKOUT_DURATION, "1")
+            r.delete(attempts_key)
+        return jsonify({"status": "Contraseña incorrecta"}), 401
+    
+    r.delete(lock_key, attempts_key)
+
     revoke_token = secrets.token_urlsafe(32)
 
     conn = get_db()
