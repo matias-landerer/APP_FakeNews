@@ -31,3 +31,17 @@ def get_current_user():
         return None
     except jwt.InvalidTokenError:
         return None
+    
+def check_rate_limit(r, key: str, limit: int, window: int) -> tuple[bool, int]:
+    """
+    Retorna (bloqueado, segundos_restantes).
+    Usa sliding window con INCR + EXPIRE en Redis.
+    """
+    current = r.incr(key)
+    if current == 1:
+        r.expire(key, window)
+    if current > limit:
+        ttl = r.ttl(key)
+        r.decr(key)
+        return True, ttl
+    return False, 0

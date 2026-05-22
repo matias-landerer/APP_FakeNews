@@ -9,17 +9,33 @@ from conexionBDD import get_db
 from email_sender import send_verification_email, send_login_alert_email, send_password_reset_email
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from funciones_extra import password_error, isvalidEmail, get_current_user
+from funciones_extra import password_error, isvalidEmail, get_current_user, check_rate_limit
 from reset_password_html import RESET_PASSWORD_HTML
+#from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 app = Flask(__name__)
+
+#app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
+
 CORS(app)
+
+@app.before_request
+def global_rate_limit():
+    ip = request.remote_addr
+    blocked, ttl = check_rate_limit(r, f"rl:global:{ip}", limit=60, window=60)
+    if blocked:
+        return jsonify({"status": f"Demasiadas solicitudes. Intenta en {ttl}s."}), 429
 
 @app.route("/login", methods=["POST"])
 def login():
+    ip = request.remote_addr
+    blocked, ttl = check_rate_limit(r, f"rl:login:{ip}", limit=20, window=60)
+    if blocked:
+        return jsonify({"status": f"Demasiadas solicitudes. Intenta en {ttl}s."}), 429
+    
     data = request.json
     username_mail = data['username_mail']
     password = data['password']
@@ -108,6 +124,11 @@ def login():
 
 @app.route("/register", methods=["POST"])
 def register():
+    ip = request.remote_addr
+    blocked, ttl = check_rate_limit(r, f"rl:register:{ip}", limit=10, window=60)
+    if blocked:
+        return jsonify({"status": f"Demasiadas solicitudes. Intenta en {ttl}s."}), 429
+    
     data = request.json
     username = data["username"]
     email = data["email"]
@@ -250,6 +271,10 @@ def analyze():
     user_id = get_current_user()
     if not user_id:
         return jsonify({"status": "No autorizado."}), 401
+    
+    blocked, ttl = check_rate_limit(r, f"rl:analyze:{user_id}", limit=30, window=60)
+    if blocked:
+        return jsonify({"status": f"Demasiadas solicitudes. Intenta en {ttl}s."}), 429
 
     conn = get_db()
     with conn.cursor() as cur:
@@ -292,6 +317,11 @@ def get_user():
     user_id = get_current_user()
     if not user_id:
         return jsonify({"status": "No autorizado."}), 401
+    
+    blocked, ttl = check_rate_limit(r, f"rl:me:{user_id}", limit=60, window=60)
+    if blocked:
+        return jsonify({"status": f"Demasiadas solicitudes. Intenta en {ttl}s."}), 429
+
 
     conn = get_db()
     with conn.cursor() as cur:
@@ -307,6 +337,11 @@ def get_user():
 
 @app.route("/forgot-password", methods=["POST"])
 def forgot_password():
+    ip = request.remote_addr
+    blocked, ttl = check_rate_limit(r, f"rl:forgot:{ip}", limit=5, window=60)
+    if blocked:
+        return jsonify({"status": f"Demasiadas solicitudes. Intenta en {ttl}s."}), 429
+
     data = request.json
     email = data.get("email", "").strip()
 
@@ -368,6 +403,11 @@ def reset_password_page():
 
 @app.route("/reset-password", methods=["POST"])
 def reset_password():
+    ip = request.remote_addr
+    blocked, ttl = check_rate_limit(r, f"rl:reset:{ip}", limit=10, window=60)
+    if blocked:
+        return jsonify({"status": f"Demasiadas solicitudes. Intenta en {ttl}s."}), 429
+
     data = request.json
     token = data.get("token", "")
     password = data.get("password", "")
@@ -410,6 +450,11 @@ def show_stats():
     user_id = get_current_user()
     if not user_id:
         return jsonify({"error": "No autorizado."}), 400
+    
+    blocked, ttl = check_rate_limit(r, f"rl:stats:{user_id}", limit=60, window=60)
+    if blocked:
+        return jsonify({"error": f"Demasiadas solicitudes. Intenta en {ttl}s."}), 429
+
 
     conn = get_db()
     with conn.cursor() as cur:
