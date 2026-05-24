@@ -44,8 +44,9 @@ def verificar_titular(titular: str) -> dict:
                 if web is None:
                     continue
                 uri = getattr(web, "uri", None)
-                if uri and uri not in fuentes:
-                    fuentes.append(uri)
+                title = getattr(web, "title", None) or uri
+                if uri and not any(f["uri"] == uri for f in fuentes):
+                    fuentes.append({"uri": uri, "title": title})
         except (AttributeError, IndexError, TypeError):
             fuentes = []
 
@@ -63,4 +64,4 @@ if __name__ == '__main__':
     print(resultado["label"])
     print("\nFuentes:")
     for fuente in resultado["fuentes"]:
-        print(fuente)
+        print(fuente["title"], "->", fuente["uri"])
