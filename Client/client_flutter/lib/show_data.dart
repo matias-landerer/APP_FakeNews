@@ -41,7 +41,7 @@ class _ShowDataPageState extends State<ShowDataPage> {
       final data = (decoded["data"] ?? []) as List<dynamic>;
 
       setState(() {
-        rows = data.map((e) => List<dynamic>.from(e)).toList();
+        rows = data.map((e) => List<dynamic>.from(e)).toList().reversed.toList();
         loading = false;
       });
     } catch (e) {
