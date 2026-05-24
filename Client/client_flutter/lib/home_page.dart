@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage> {
   final controller = TextEditingController();
   String score = "";
   String label = "";
-  List<String> fuentes = [];
+  List<Map<String, String>> fuentes = [];
   String error = "";
   bool loading = false;
   bool showOptions = false;
@@ -104,7 +104,13 @@ class _HomePageState extends State<HomePage> {
 
         final fuentesData = resultado["fuentes"];
         if (fuentesData is List) {
-          fuentes = fuentesData.map((e) => e.toString().trim()).toList();
+          fuentes = fuentesData
+              .whereType<Map>()
+              .map((e) => {
+                    "uri": e["uri"]?.toString() ?? "",
+                    "title": e["title"]?.toString() ?? "",
+                  })
+              .toList();
         } else {
           fuentes = [];
         }
@@ -280,7 +286,7 @@ class _HomePageState extends State<HomePage> {
                                               return null;
                                             }),
                                         onTap: () async {
-                                          final url = Uri.parse(fuente);
+                                          final url = Uri.parse(fuente["uri"]!);
                                           if (await canLaunchUrl(url)) {
                                             await launchUrl(
                                               url,
@@ -304,7 +310,7 @@ class _HomePageState extends State<HomePage> {
                                               ),
                                               Expanded(
                                                 child: Text(
-                                                  fuente,
+                                                  fuente["title"]!.isNotEmpty ? fuente["title"]! : fuente["uri"]!,
                                                   style: const TextStyle(
                                                     color: Color(0xFF2196F3),
                                                     decoration: TextDecoration
