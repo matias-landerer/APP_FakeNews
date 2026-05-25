@@ -18,9 +18,9 @@ CREATE TABLE users(
 CREATE TABLE consultas(
     ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
-    titular VARCHAR(255),
+    titular TEXT,
     score VARCHAR(255),
-    label VARCHAR(255),
+    label TEXT,
     CONSTRAINT fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES "users"(ID)
