@@ -3,6 +3,7 @@ import secrets
 import bcrypt
 import jwt
 import redis
+import mercadopago
 from datetime import datetime, timedelta, timezone
 from API import verificar_titular
 from conexionBDD import get_db
@@ -13,6 +14,14 @@ from funciones_extra import password_error, isvalidEmail, get_current_user, chec
 from reset_password_html import RESET_PASSWORD_HTML
 #from werkzeug.middleware.proxy_fix import ProxyFix
 
+
+sdk = mercadopago.SDK(parametros.MP_ACCESS_TOKEN)
+
+CREDIT_PACKAGES = {
+    "100":  {"credits": 100,  "amount": 990},
+    "500":  {"credits": 500,  "amount": 3990},
+    "1000": {"credits": 1000, "amount": 6990},
+}
 
 r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
@@ -466,6 +475,73 @@ def show_stats():
     conn.close()
 
     return jsonify({"data": rows}), 200
+
+@app.route("/buy-credits", methods=["POST"])
+def buy_credits():
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({"status": "No autorizado."}), 401
+
+    data = request.json
+    package_id = data.get("package")
+    package = CREDIT_PACKAGES.get(package_id)
+    if not package:
+        return jsonify({"status": "Paquete inválido."}), 400
+
+    preference_data = {
+        "items": [{
+            "title": f"{package['credits']} créditos - Fake News Detector",
+            "quantity": 1,
+            "unit_price": package["amount"],
+            "currency_id": "CLP",
+        }],
+        "metadata": {
+            "user_id": str(user_id),
+            "credits": package["credits"],
+        },
+        "back_urls": {
+            "success": f"{parametros.APP_BASE_URL}/payment-success",
+            "failure": f"{parametros.APP_BASE_URL}/payment-failure",
+        },
+        "notification_url": f"{parametros.APP_BASE_URL}/webhook/mp",
+    }
+
+    result = sdk.preference().create(preference_data)
+    preference = result["response"]
+    return jsonify({"preference_id": preference["id"]}), 200
+
+@app.route("/webhook/mp", methods=["POST"])
+def mp_webhook():
+    data = request.json
+    if data.get("type") != "payment":
+        return "", 200
+
+    payment_id = data.get("data", {}).get("id")
+    if not payment_id:
+        return "", 200
+
+    payment = sdk.payment().get(payment_id)["response"]
+
+    if payment.get("status") != "approved":
+        return "", 200
+
+    metadata = payment.get("metadata", {})
+    user_id = metadata.get("user_id")
+    credits = int(metadata.get("credits", 0))
+
+    if not user_id or not credits:
+        return "", 200
+
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE users SET creditos = creditos + %s WHERE id = %s",
+            (credits, user_id)
+        )
+        conn.commit()
+    conn.close()
+
+    return "", 200
 
 
 if __name__ == '__main__':

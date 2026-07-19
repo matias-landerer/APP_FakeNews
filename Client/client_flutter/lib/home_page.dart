@@ -376,6 +376,21 @@ class _HomePageState extends State<HomePage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
+                            setState(() { showOptions = false; });
+                            Navigator.pushNamed(
+                              context,
+                              "/buy-credits",
+                              arguments: userId,
+                            );
+                          },
+                          child: const Text("Comprar créditos"),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
                             Navigator.pushNamed(context, "/info");
                           },
                           child: const Text("Ir a info"),
