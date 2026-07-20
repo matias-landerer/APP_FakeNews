@@ -512,20 +512,69 @@ def buy_credits():
 
 @app.route("/webhook/mp", methods=["POST"])
 def mp_webhook():
+    import hashlib, hmac as hmac_lib
+
+    # 1. Verificar firma HMAC
+    x_signature = request.headers.get("x-signature", "")
+    x_request_id = request.headers.get("x-request-id", "")
+    data_id = (request.args.get("data.id", "") or "").lower()
+
+    ts = hash_value = None
+    for part in x_signature.split(","):
+        if "=" not in part:
+            continue
+        key, _, value = part.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if key == "ts":
+            ts = value
+        if key == "v1":
+            hash_value = value
+
+    if not ts or not hash_value:
+        return "", 401
+
+    parts = []
+    if data_id:
+        parts.append(f"id:{data_id}")
+    if x_request_id:
+        parts.append(f"request-id:{x_request_id}")
+    parts.append(f"ts:{ts}")
+    manifest = ";".join(parts) + ";"
+
+    computed = hmac_lib.new(
+        parametros.MP_WEBHOOK_SECRET.encode(),
+        manifest.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac_lib.compare_digest(computed, hash_value):
+        return "", 401
+
+    # 2. Verificar que el tipo sea order
     data = request.json
-    if data.get("type") != "payment":
+    if data.get("type") != "order":
         return "", 200
 
-    payment_id = data.get("data", {}).get("id")
-    if not payment_id:
+    order_id = data.get("data", {}).get("id")
+    if not order_id:
         return "", 200
 
-    payment = sdk.payment().get(payment_id)["response"]
-
-    if payment.get("status") != "approved":
+    # 3. Consultar la order directamente a MP para verificar estado
+    import requests as req_lib
+    response = req_lib.get(
+        f"https://api.mercadopago.com/v1/orders/{order_id}",
+        headers={"Authorization": f"Bearer {parametros.MP_ACCESS_TOKEN}"}
+    )
+    if response.status_code != 200:
         return "", 200
 
-    metadata = payment.get("metadata", {})
+    order = response.json()
+    if order.get("status") != "processed":
+        return "", 200
+
+    # 4. Extraer metadata y acreditar créditos
+    metadata = order.get("metadata", {})
     user_id = metadata.get("user_id")
     credits = int(metadata.get("credits", 0))
 
