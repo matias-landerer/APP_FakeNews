@@ -23,6 +23,30 @@ class _BuyCreditsPageState extends State<BuyCreditsPage> {
     if (args is String) userId = args;
   }
 
+  void _showPaymentInstructions() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Completa tu pago"),
+        content: const Text(
+          "Se abrió Mercado Pago en tu navegador.\n\n"
+          "1. Completa el pago ahí.\n"
+          "2. Cuando termines, vuelve a esta app.\n"
+          "3. Tus créditos se acreditan automáticamente unos "
+          "segundos después del pago.\n\n"
+          "Si no los ves de inmediato, espera un momento y vuelve a "
+          "entrar a esta pantalla.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Entendido"),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _buyCredits(String packageId) async {
     setState(() {
       loading = true;
@@ -49,12 +73,13 @@ class _BuyCreditsPageState extends State<BuyCreditsPage> {
         return;
       }
 
-      final preferenceId = data["preference_id"];
-      final url = Uri.parse(
-        "https://www.mercadopago.cl/checkout/v1/redirect?pref_id=$preferenceId",
-      );
+      final checkoutUrl = data["init_point"];
+      final url = Uri.parse(checkoutUrl);
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
+        if (mounted) _showPaymentInstructions();
+      } else {
+        setState(() => error = "No se pudo abrir la página de pago.");
       }
     } catch (_) {
       setState(() {

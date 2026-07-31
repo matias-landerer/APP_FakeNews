@@ -508,87 +508,113 @@ def buy_credits():
 
     result = sdk.preference().create(preference_data)
     preference = result["response"]
-    return jsonify({"preference_id": preference["id"]}), 200
+    return jsonify({
+        "init_point": preference["init_point"],
+        "sandbox_init_point": preference["sandbox_init_point"],
+    }), 200
 
 @app.route("/webhook/mp", methods=["POST"])
 def mp_webhook():
-    import hashlib, hmac as hmac_lib
-
-    # 1. Verificar firma HMAC
-    x_signature = request.headers.get("x-signature", "")
-    x_request_id = request.headers.get("x-request-id", "")
-    data_id = (request.args.get("data.id", "") or "").lower()
-
-    ts = hash_value = None
-    for part in x_signature.split(","):
-        if "=" not in part:
-            continue
-        key, _, value = part.partition("=")
-        key = key.strip()
-        value = value.strip()
-        if key == "ts":
-            ts = value
-        if key == "v1":
-            hash_value = value
-
-    if not ts or not hash_value:
-        return "", 401
-
-    parts = []
-    if data_id:
-        parts.append(f"id:{data_id}")
-    if x_request_id:
-        parts.append(f"request-id:{x_request_id}")
-    parts.append(f"ts:{ts}")
-    manifest = ";".join(parts) + ";"
-
-    computed = hmac_lib.new(
-        parametros.MP_WEBHOOK_SECRET.encode(),
-        manifest.encode(),
-        hashlib.sha256
-    ).hexdigest()
-
-    if not hmac_lib.compare_digest(computed, hash_value):
-        return "", 401
-
-    # 2. Verificar que el tipo sea order
-    data = request.json
-    if data.get("type") != "order":
-        return "", 200
-
-    order_id = data.get("data", {}).get("id")
-    if not order_id:
-        return "", 200
-
-    # 3. Consultar la order directamente a MP para verificar estado
     import requests as req_lib
-    response = req_lib.get(
-        f"https://api.mercadopago.com/v1/orders/{order_id}",
-        headers={"Authorization": f"Bearer {parametros.MP_ACCESS_TOKEN}"}
-    )
-    if response.status_code != 200:
+    import hmac
+    import hashlib
+
+    # --- Identificar tipo de notificación ---
+    topic = request.args.get("topic") or request.args.get("type")
+    resource_id = request.args.get("id") or request.args.get("data.id")
+
+    body = request.get_json(silent=True) or {}
+    if not topic:
+        topic = body.get("type")
+    if not resource_id:
+        resource_id = body.get("data", {}).get("id")
+
+    if not topic or not resource_id:
         return "", 200
 
-    order = response.json()
-    if order.get("status") != "processed":
-        return "", 200
+    # --- Verificación de firma HMAC (solo si viene x-signature) ---
+    signature = request.headers.get("x-signature", "")
+    request_id = request.headers.get("x-request-id", "")
 
-    # 4. Extraer metadata y acreditar créditos
-    metadata = order.get("metadata", {})
-    user_id = metadata.get("user_id")
-    credits = int(metadata.get("credits", 0))
+    if signature:
+        # x-signature viene como: "ts=1704908010,v1=abc123..."
+        ts = None
+        v1 = None
+        for part in signature.split(","):
+            key, _, value = part.strip().partition("=")
+            if key == "ts":
+                ts = value
+            elif key == "v1":
+                v1 = value
 
-    if not user_id or not credits:
-        return "", 200
+        if not ts or not v1:
+            return jsonify({"status": "Firma malformada"}), 401
 
-    conn = get_db()
-    with conn.cursor() as cur:
-        cur.execute(
-            "UPDATE users SET creditos = creditos + %s WHERE id = %s",
-            (credits, user_id)
+        # Manifest segun especificacion de MP
+        manifest = f"id:{resource_id};request-id:{request_id};ts:{ts};"
+        computed = hmac.new(
+            parametros.MP_WEBHOOK_SECRET.encode(),
+            manifest.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+
+        if not hmac.compare_digest(computed, v1):
+            return jsonify({"status": "Firma inválida"}), 401
+
+    # --- Resolver payment_ids ---
+    headers = {"Authorization": f"Bearer {parametros.MP_ACCESS_TOKEN}"}
+    payment_ids = []
+
+    if topic == "payment":
+        payment_ids = [resource_id]
+    elif topic == "merchant_order":
+        mo = req_lib.get(
+            f"https://api.mercadopago.com/merchant_orders/{resource_id}",
+            headers=headers,
         )
-        conn.commit()
-    conn.close()
+        if mo.status_code != 200:
+            return "", 200
+        for p in mo.json().get("payments", []):
+            payment_ids.append(p.get("id"))
+    else:
+        return "", 200
+
+    # --- Verificar cada pago contra la API y acreditar ---
+    for pid in payment_ids:
+        if not pid:
+            continue
+        resp = req_lib.get(
+            f"https://api.mercadopago.com/v1/payments/{pid}",
+            headers=headers,
+        )
+        if resp.status_code != 200:
+            continue
+        payment = resp.json()
+        if payment.get("status") != "approved":
+            continue
+
+        metadata = payment.get("metadata", {})
+        user_id = metadata.get("user_id")
+        credits = int(metadata.get("credits", 0))
+        if not user_id or not credits:
+            continue
+
+        # --- Proteccion anti-doble-acreditacion ---
+        conn = get_db()
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO pagos_procesados (payment_id) VALUES (%s) "
+                "ON CONFLICT (payment_id) DO NOTHING",
+                (str(pid),),
+            )
+            ya_existia = cur.rowcount == 0  # 0 filas insertadas = ya estaba
+            if not ya_existia:
+                cur.execute(
+                    "UPDATE users SET creditos = creditos + %s WHERE id = %s",
+                    (credits, user_id),
+                )
+            conn.commit()
+        conn.close()
 
     return "", 200
 
