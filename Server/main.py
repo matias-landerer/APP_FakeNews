@@ -499,6 +499,12 @@ def buy_credits():
             "user_id": str(user_id),
             "credits": package["credits"],
         },
+        #PARA BLOQUEAR TARJETAS DE CŔEDITO
+        "payment_methods": {
+            "excluded_payment_types": [
+                {"id": "credit_card"}
+            ]
+        },
         "back_urls": {
             "success": f"{parametros.APP_BASE_URL}/payment-success",
             "failure": f"{parametros.APP_BASE_URL}/payment-failure",
