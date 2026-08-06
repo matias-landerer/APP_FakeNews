@@ -1,5 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-DROP TABLE IF EXISTS users, consultas;
+DROP TABLE IF EXISTS users, consultas, pagos_procesados;
 
 CREATE TABLE users(
     ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -24,4 +24,12 @@ CREATE TABLE consultas(
     CONSTRAINT fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES "users"(ID)
+);
+
+CREATE TABLE pagos_procesados (
+    payment_id VARCHAR(64) PRIMARY KEY,
+    user_id UUID NOT NULL,
+    creditos INTEGER NOT NULL,
+    monto INTEGER,
+    procesado_en TIMESTAMP DEFAULT NOW()
 );

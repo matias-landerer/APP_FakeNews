@@ -3,6 +3,7 @@ import secrets
 import bcrypt
 import jwt
 import redis
+import mercadopago
 from datetime import datetime, timedelta, timezone
 from API import verificar_titular
 from conexionBDD import get_db
@@ -13,6 +14,14 @@ from funciones_extra import password_error, isvalidEmail, get_current_user, chec
 from reset_password_html import RESET_PASSWORD_HTML
 #from werkzeug.middleware.proxy_fix import ProxyFix
 
+
+sdk = mercadopago.SDK(parametros.MP_ACCESS_TOKEN)
+
+CREDIT_PACKAGES = {
+    "100":  {"credits": 100,  "amount": 990},
+    #"500":  {"credits": 500,  "amount": 3990},
+    #"1000": {"credits": 1000, "amount": 6990},
+}
 
 r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
@@ -466,6 +475,155 @@ def show_stats():
     conn.close()
 
     return jsonify({"data": rows}), 200
+
+@app.route("/buy-credits", methods=["POST"])
+def buy_credits():
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({"status": "No autorizado."}), 401
+
+    data = request.json
+    package_id = data.get("package")
+    package = CREDIT_PACKAGES.get(package_id)
+    if not package:
+        return jsonify({"status": "Paquete inválido."}), 400
+
+    preference_data = {
+        "items": [{
+            "title": f"{package['credits']} créditos - Fake News Detector",
+            "quantity": 1,
+            "unit_price": package["amount"],
+            "currency_id": "CLP",
+        }],
+        "metadata": {
+            "user_id": str(user_id),
+            "credits": package["credits"],
+        },
+        #PARA BLOQUEAR TARJETAS DE CŔEDITO
+        "payment_methods": {
+            "excluded_payment_types": [
+                {"id": "credit_card"}
+            ]
+        },
+        "back_urls": {
+            "success": f"{parametros.APP_BASE_URL}/payment-success",
+            "failure": f"{parametros.APP_BASE_URL}/payment-failure",
+        },
+        "notification_url": f"{parametros.APP_BASE_URL}/webhook/mp",
+    }
+
+    result = sdk.preference().create(preference_data)
+    preference = result["response"]
+    return jsonify({
+        "init_point": preference["init_point"],
+        "sandbox_init_point": preference["sandbox_init_point"],
+    }), 200
+
+@app.route("/webhook/mp", methods=["POST"])
+def mp_webhook():
+    import requests as req_lib
+    import hmac
+    import hashlib
+
+    # --- Identificar tipo de notificación ---
+    topic = request.args.get("topic") or request.args.get("type")
+    resource_id = request.args.get("id") or request.args.get("data.id")
+
+    body = request.get_json(silent=True) or {}
+    if not topic:
+        topic = body.get("type")
+    if not resource_id:
+        resource_id = body.get("data", {}).get("id")
+
+    if not topic or not resource_id:
+        return "", 200
+
+    # --- Verificación de firma HMAC (solo si viene x-signature) ---
+    signature = request.headers.get("x-signature", "")
+    request_id = request.headers.get("x-request-id", "")
+
+    if signature:
+        # x-signature viene como: "ts=1704908010,v1=abc123..."
+        ts = None
+        v1 = None
+        for part in signature.split(","):
+            key, _, value = part.strip().partition("=")
+            if key == "ts":
+                ts = value
+            elif key == "v1":
+                v1 = value
+
+        if not ts or not v1:
+            return jsonify({"status": "Firma malformada"}), 401
+
+        # Manifest segun especificacion de MP
+        manifest = f"id:{resource_id};request-id:{request_id};ts:{ts};"
+        computed = hmac.new(
+            parametros.MP_WEBHOOK_SECRET.encode(),
+            manifest.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+
+        if not hmac.compare_digest(computed, v1):
+            return jsonify({"status": "Firma inválida"}), 401
+
+    # --- Resolver payment_ids ---
+    headers = {"Authorization": f"Bearer {parametros.MP_ACCESS_TOKEN}"}
+    payment_ids = []
+
+    if topic == "payment":
+        payment_ids = [resource_id]
+    elif topic == "merchant_order":
+        mo = req_lib.get(
+            f"https://api.mercadopago.com/merchant_orders/{resource_id}",
+            headers=headers,
+        )
+        if mo.status_code != 200:
+            return "", 200
+        for p in mo.json().get("payments", []):
+            payment_ids.append(p.get("id"))
+    else:
+        return "", 200
+
+    # --- Verificar cada pago contra la API y acreditar ---
+    for pid in payment_ids:
+        if not pid:
+            continue
+        resp = req_lib.get(
+            f"https://api.mercadopago.com/v1/payments/{pid}",
+            headers=headers,
+        )
+        if resp.status_code != 200:
+            continue
+        payment = resp.json()
+        if payment.get("status") != "approved":
+            continue
+
+        metadata = payment.get("metadata", {})
+        user_id = metadata.get("user_id")
+        credits = int(metadata.get("credits", 0))
+        if not user_id or not credits:
+            continue
+
+        # --- Proteccion anti-doble-acreditacion ---
+        conn = get_db()
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO pagos_procesados (payment_id, user_id, creditos, monto) "
+                "VALUES (%s, %s, %s, %s) "
+                "ON CONFLICT (payment_id) DO NOTHING",
+                (str(pid), user_id, credits, payment.get("transaction_amount")),
+            )
+            ya_existia = cur.rowcount == 0  # 0 filas insertadas = ya estaba
+            if not ya_existia:
+                cur.execute(
+                    "UPDATE users SET creditos = creditos + %s WHERE id = %s",
+                    (credits, user_id),
+                )
+            conn.commit()
+        conn.close()
+
+    return "", 200
 
 
 if __name__ == '__main__':

@@ -13,9 +13,28 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   String? userId;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _fetchUserInfo();
+    }
+  }
+  
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -369,6 +388,21 @@ class _HomePageState extends State<HomePage> {
                             );
                           },
                           child: const Text("Historial de consultas"),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() { showOptions = false; });
+                            Navigator.pushNamed(
+                              context,
+                              "/buy-credits",
+                              arguments: userId,
+                            );
+                          },
+                          child: const Text("Comprar créditos"),
                         ),
                       ),
                       const SizedBox(height: 12),
