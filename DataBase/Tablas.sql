@@ -28,5 +28,8 @@ CREATE TABLE consultas(
 
 CREATE TABLE pagos_procesados (
     payment_id VARCHAR(64) PRIMARY KEY,
+    user_id UUID NOT NULL,
+    creditos INTEGER NOT NULL,
+    monto INTEGER,
     procesado_en TIMESTAMP DEFAULT NOW()
 );

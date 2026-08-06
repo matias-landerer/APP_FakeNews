@@ -19,8 +19,8 @@ sdk = mercadopago.SDK(parametros.MP_ACCESS_TOKEN)
 
 CREDIT_PACKAGES = {
     "100":  {"credits": 100,  "amount": 990},
-    "500":  {"credits": 500,  "amount": 3990},
-    "1000": {"credits": 1000, "amount": 6990},
+    #"500":  {"credits": 500,  "amount": 3990},
+    #"1000": {"credits": 1000, "amount": 6990},
 }
 
 r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
@@ -609,9 +609,10 @@ def mp_webhook():
         conn = get_db()
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO pagos_procesados (payment_id) VALUES (%s) "
+                "INSERT INTO pagos_procesados (payment_id, user_id, creditos, monto) "
+                "VALUES (%s, %s, %s, %s) "
                 "ON CONFLICT (payment_id) DO NOTHING",
-                (str(pid),),
+                (str(pid), user_id, credits, payment.get("transaction_amount")),
             )
             ya_existia = cur.rowcount == 0  # 0 filas insertadas = ya estaba
             if not ya_existia:
