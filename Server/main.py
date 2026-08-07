@@ -542,7 +542,7 @@ def mp_webhook():
     signature = request.headers.get("x-signature", "")
     request_id = request.headers.get("x-request-id", "")
 
-    if signature:
+    if signature and topic == "payment":
         # x-signature viene como: "ts=1704908010,v1=abc123..."
         ts = None
         v1 = None
