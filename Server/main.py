@@ -1,3 +1,4 @@
+import os
 import parametros
 import secrets
 import bcrypt
@@ -23,7 +24,12 @@ CREDIT_PACKAGES = {
     #"1000": {"credits": 1000, "amount": 6990},
 }
 
-r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+r = redis.Redis(
+    host=os.getenv("REDIS_HOST", "localhost"),
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    db=0,
+    decode_responses=True
+)
 
 app = Flask(__name__)
 
