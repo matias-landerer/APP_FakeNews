@@ -1,0 +1,11 @@
+flask
+flask-cors
+gunicorn
+psycopg[binary]
+bcrypt
+pyjwt
+redis
+mercadopago
+google-genai
+anthropic
+python-dotenv
