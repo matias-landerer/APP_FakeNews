@@ -13,8 +13,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from funciones_extra import password_error, isvalidEmail, get_current_user, check_rate_limit
 from reset_password_html import RESET_PASSWORD_HTML
-#from werkzeug.middleware.proxy_fix import ProxyFix
-
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 sdk = mercadopago.SDK(parametros.MP_ACCESS_TOKEN)
 
@@ -33,7 +32,7 @@ r = redis.Redis(
 
 app = Flask(__name__)
 
-#app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 CORS(app)
 
