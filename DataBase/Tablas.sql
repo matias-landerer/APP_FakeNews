@@ -1,22 +1,35 @@
-DROP TABLE IF EXISTS users, consultas;
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+DROP TABLE IF EXISTS users, consultas, pagos_procesados;
 
 CREATE TABLE users(
-    ID SERIAL PRIMARY KEY,
+    ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(255),
     email VARCHAR(255),
     clave VARCHAR(255),
     creditos INTEGER DEFAULT 20,
     verified BOOLEAN DEFAULT FALSE,
-    verify_token VARCHAR(64)
+    verify_token VARCHAR(64),
+    revoke_token VARCHAR(64),
+    session_revoked BOOLEAN DEFAULT FALSE,
+    reset_token VARCHAR(64),
+    reset_token_expiry TIMESTAMP
 );
 
 CREATE TABLE consultas(
-    ID SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    titular VARCHAR(255),
+    ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    titular TEXT,
     score VARCHAR(255),
-    label VARCHAR(255),
+    label TEXT,
     CONSTRAINT fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES "users"(ID)
+);
+
+CREATE TABLE pagos_procesados (
+    payment_id VARCHAR(64) PRIMARY KEY,
+    user_id UUID NOT NULL,
+    creditos INTEGER NOT NULL,
+    monto INTEGER,
+    procesado_en TIMESTAMP DEFAULT NOW()
 );

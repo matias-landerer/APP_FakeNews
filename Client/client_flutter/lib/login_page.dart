@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'parametros.dart';
-import 'session.dart'; // ← agregar
+import 'session.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,7 +20,140 @@ class _LoginPageState extends State<LoginPage> {
   String error = "";
   bool loading = false;
 
-  int userid = 0;
+  String userid = "";
+
+  int _wrongPasswordAttempts = 0;
+  static const int _maxAttempts = 5;
+  static const int _lockoutSeconds = 15;
+  int _lockoutSecondsLeft = 0;
+  Timer? _lockoutTimer;
+
+  bool get _isLockedOut => _lockoutSecondsLeft > 0;
+
+  void _startLockout() {
+    setState(() {
+      _lockoutSecondsLeft = _lockoutSeconds;
+      error = "";
+    });
+    _lockoutTimer?.cancel();
+    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+      setState(() { _lockoutSecondsLeft--; });
+      if (_lockoutSecondsLeft <= 0) {
+        timer.cancel();
+        setState(() { _wrongPasswordAttempts = 0; });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _lockoutTimer?.cancel();
+    userController.dispose();
+    passController.dispose();
+    super.dispose();
+  }
+
+  void _showForgotPasswordDialog() {
+    final emailCtrl = TextEditingController();
+    String dialogError = '';
+    String dialogSuccess = '';
+    bool dialogLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            title: const Text('Restablecer contraseña'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Ingresa tu email y te enviaremos un enlace para cambiar tu contraseña.',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF555555)),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                if (dialogError.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    dialogError,
+                    style: const TextStyle(color: Color(0xFFEF342A), fontSize: 13),
+                  ),
+                ],
+                if (dialogSuccess.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    dialogSuccess,
+                    style: const TextStyle(color: Colors.green, fontSize: 13),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancelar'),
+              ),
+              if (dialogLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFEF342A),
+                    ),
+                  ),
+                )
+              else
+                ElevatedButton(
+                  onPressed: dialogSuccess.isNotEmpty
+                      ? null
+                      : () async {
+                          if (emailCtrl.text.trim().isEmpty) {
+                            setDialogState(() => dialogError = 'Por favor, ingresa tu email.');
+                            return;
+                          }
+                          setDialogState(() {
+                            dialogLoading = true;
+                            dialogError = '';
+                          });
+                          try {
+                            final response = await http
+                                .post(
+                                  Uri.parse('$API_BASE_URL/forgot-password'),
+                                  headers: {'Content-Type': 'application/json'},
+                                  body: jsonEncode({'email': emailCtrl.text.trim()}),
+                                )
+                                .timeout(const Duration(seconds: 10));
+                            final data = jsonDecode(response.body);
+                            setDialogState(() {
+                              dialogLoading = false;
+                              dialogSuccess = data['status'];
+                            });
+                          } catch (_) {
+                            setDialogState(() {
+                              dialogLoading = false;
+                              dialogError = 'No se pudo conectar al servidor.';
+                            });
+                          }
+                        },
+                  child: const Text('Enviar'),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   Future<void> login() async {
     setState(() {
@@ -55,9 +188,18 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       if (data["status"] == "InicioExitoso") {
-        userid = data["user_id"];
-        await saveSession(userid);  // ← agregar
+        userid = data["token"].toString();
+        await saveSession(userid);
         Navigator.pushReplacementNamed(context, "/home", arguments: userid);
+      } else if (data["status"] == "Contraseña incorrecta") {
+        _wrongPasswordAttempts++;
+        if (_wrongPasswordAttempts >= _maxAttempts) {
+          _startLockout();
+        } else {
+          setState(() {
+            error = "Contraseña incorrecta. Intento $_wrongPasswordAttempts/$_maxAttempts.";
+          });
+        }
       } else {
         setState(() {
           error = data["status"];
@@ -148,8 +290,23 @@ class _LoginPageState extends State<LoginPage> {
                     if (loading)
                       const Center(
                         child: CircularProgressIndicator(color: secondary),
-                      ),
-                    if (!loading)
+                      )
+                    else if (_isLockedOut)
+                      Column(
+                        children: [
+                          ElevatedButton(
+                            onPressed: null,
+                            child: Text("Espera $_lockoutSecondsLeft s"),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Demasiados intentos fallidos.\nIntenta de nuevo en unos segundos.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: secondary, fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                        ],
+                      )
+                    else
                       ElevatedButton(
                         onPressed: login,
                         child: const Text("Entrar"),
@@ -161,7 +318,11 @@ class _LoginPageState extends State<LoginPage> {
                       },
                       child: const Text("Crear cuenta"),
                     ),
-                    if (error.isNotEmpty) ...[
+                    TextButton(
+                      onPressed: _showForgotPasswordDialog,
+                      child: const Text("¿Olvidaste tu contraseña?"),
+                    ),
+                    if (error.isNotEmpty && !_isLockedOut) ...[
                       const SizedBox(height: 10),
                       Text(
                         error,

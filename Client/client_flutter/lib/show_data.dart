@@ -13,25 +13,20 @@ class _ShowDataPageState extends State<ShowDataPage> {
   bool loading = false;
   String error = "";
   bool autoLoaded = false;
-  int? userId;
+  String? userId;
   List<List<dynamic>> rows = [];
 
-  Future<void> showData(int userId) async {
+  Future<void> showData(String userId) async {
     setState(() {
       loading = true;
       error = "";
     });
 
     try {
-      final request = http.Request(
-        "GET",
-        Uri.parse("$API_BASE_URL/statistics"),
+      final response = await http.get(
+          Uri.parse("$API_BASE_URL/statistics"),
+          headers: {"Authorization": "Bearer $userId"},
       );
-      request.headers["Content-Type"] = "application/json";
-      request.body = jsonEncode({"id": userId});
-
-      final streamed = await request.send();
-      final response = await http.Response.fromStream(streamed);
 
       if (response.statusCode >= 400) {
         setState(() {
@@ -46,7 +41,7 @@ class _ShowDataPageState extends State<ShowDataPage> {
       final data = (decoded["data"] ?? []) as List<dynamic>;
 
       setState(() {
-        rows = data.map((e) => List<dynamic>.from(e)).toList();
+        rows = data.map((e) => List<dynamic>.from(e)).toList().reversed.toList();
         loading = false;
       });
     } catch (e) {
@@ -67,15 +62,9 @@ class _ShowDataPageState extends State<ShowDataPage> {
     autoLoaded = true;
     final args = ModalRoute.of(context)?.settings.arguments;
 
-    if (args is int) {
+    if (args is String) {
       userId = args;
       showData(args);
-    } else if (args is String) {
-      final parsed = int.tryParse(args);
-      if (parsed != null) {
-        userId = parsed;
-        showData(parsed);
-      }
     } else {
       setState(() {
         error = "No se recibió ID de usuario.";

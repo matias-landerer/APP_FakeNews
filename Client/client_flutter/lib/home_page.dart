@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'parametros.dart';
-import 'session.dart'; // ← agregar
+import 'session.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -13,14 +13,33 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  int? userId;
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  String? userId;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _fetchUserInfo();
+    }
+  }
+  
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)?.settings.arguments;
-    if (args is int) {
+    if (args is String) {
       userId = args;
       _fetchUserInfo();
     }
@@ -30,8 +49,9 @@ class _HomePageState extends State<HomePage> {
     if (userId == null) return;
     try {
       final response = await http
-          .get(Uri.parse("$API_BASE_URL/user/$userId"))
-          .timeout(const Duration(seconds: 10));
+          .get(Uri.parse("$API_BASE_URL/user/me"),
+          headers: {"Authorization": "Bearer $userId"},
+          ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
@@ -47,7 +67,7 @@ class _HomePageState extends State<HomePage> {
   final controller = TextEditingController();
   String score = "";
   String label = "";
-  List<String> fuentes = [];
+  List<Map<String, String>> fuentes = [];
   String error = "";
   bool loading = false;
   bool showOptions = false;
@@ -72,12 +92,24 @@ class _HomePageState extends State<HomePage> {
       final response = await http
           .post(
             Uri.parse("$API_BASE_URL/analyze"),
-            headers: {"Content-Type": "application/json"},
-            body: jsonEncode({"titular": controller.text, "user_id": userId}),
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer $userId",
+              },
+            body: jsonEncode({"titular": controller.text}),
           )
           .timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
+
+      if (response.statusCode == 401 &&
+          (data["status"] as String? ?? "").contains("revocada")) {
+        await clearSession();
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, "/login", (r) => false);
+        }
+        return;
+      }
 
       if (data["resultado"]?["label"] ==
           "Error: No tiene suficientes créditos") {
@@ -91,7 +123,13 @@ class _HomePageState extends State<HomePage> {
 
         final fuentesData = resultado["fuentes"];
         if (fuentesData is List) {
-          fuentes = fuentesData.map((e) => e.toString().trim()).toList();
+          fuentes = fuentesData
+              .whereType<Map>()
+              .map((e) => {
+                    "uri": e["uri"]?.toString() ?? "",
+                    "title": e["title"]?.toString() ?? "",
+                  })
+              .toList();
         } else {
           fuentes = [];
         }
@@ -267,7 +305,7 @@ class _HomePageState extends State<HomePage> {
                                               return null;
                                             }),
                                         onTap: () async {
-                                          final url = Uri.parse(fuente);
+                                          final url = Uri.parse(fuente["uri"]!);
                                           if (await canLaunchUrl(url)) {
                                             await launchUrl(
                                               url,
@@ -291,7 +329,7 @@ class _HomePageState extends State<HomePage> {
                                               ),
                                               Expanded(
                                                 child: Text(
-                                                  fuente,
+                                                  fuente["title"]!.isNotEmpty ? fuente["title"]! : fuente["uri"]!,
                                                   style: const TextStyle(
                                                     color: Color(0xFF2196F3),
                                                     decoration: TextDecoration
@@ -350,6 +388,21 @@ class _HomePageState extends State<HomePage> {
                             );
                           },
                           child: const Text("Historial de consultas"),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() { showOptions = false; });
+                            Navigator.pushNamed(
+                              context,
+                              "/buy-credits",
+                              arguments: userId,
+                            );
+                          },
+                          child: const Text("Comprar créditos"),
                         ),
                       ),
                       const SizedBox(height: 12),

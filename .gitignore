@@ -1,9 +1,12 @@
 __pycache__
-parametros.py
 
 uninstall.py
 
 venv
+
+.env
+
+*.pyc
 
 #Flutter:
 assets/

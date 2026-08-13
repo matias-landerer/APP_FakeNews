@@ -5,6 +5,7 @@ import 'register_page.dart';
 import 'show_data.dart';
 import 'info.dart';
 import 'session.dart';
+import 'buy_credits_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +14,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  final int? initialUserId;
+  final String? initialUserId;
   const MyApp({super.key, this.initialUserId});
 
   @override
@@ -103,6 +104,7 @@ class MyApp extends StatelessWidget {
         "/register": (context) => const RegisterPage(),
         "/statistics": (context) => const ShowDataPage(),
         "/info": (context) => const InfoPage(),
+        "/buy-credits": (context) => const BuyCreditsPage(),
       },
     );
   }
