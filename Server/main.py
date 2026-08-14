@@ -35,7 +35,7 @@ app = Flask(__name__)
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-CORS(app)
+CORS(app, origins=["https://fake-news-detector.com"])
 
 @app.before_request
 def global_rate_limit():
