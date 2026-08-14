@@ -13,6 +13,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from funciones_extra import password_error, isvalidEmail, get_current_user, check_rate_limit
 from reset_password_html import RESET_PASSWORD_HTML
+from payment_result_html import SUCCESSFUL, FAILURE
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 sdk = mercadopago.SDK(parametros.MP_ACCESS_TOKEN)
@@ -684,6 +685,15 @@ def verify_pending_payments():
         conn.close()
 
     return jsonify({"status": "ok", "creditos_acreditados": acreditados}), 200
+
+@app.route("/payment-success", methods=["GET"])
+def payment_success_page():
+    return SUCCESSFUL, 200
+
+
+@app.route("/payment-failure", methods=["GET"])
+def payment_failure_page():
+    return FAILURE, 200
 
 
 if __name__ == '__main__':
