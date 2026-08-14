@@ -500,6 +500,7 @@ def buy_credits():
             "unit_price": package["amount"],
             "currency_id": "CLP",
         }],
+        "external_reference": str(user_id),
         "metadata": {
             "user_id": str(user_id),
             "credits": package["credits"],
@@ -629,6 +630,60 @@ def mp_webhook():
         conn.close()
 
     return "", 200
+
+@app.route("/verify-pending-payments", methods=["POST"])
+def verify_pending_payments():
+    import requests as req_lib
+
+    user_id = get_current_user()
+    if not user_id:
+        return jsonify({"status": "No autorizado."}), 401
+
+    blocked, ttl = check_rate_limit(r, f"rl:verify:{user_id}", limit=10, window=60)
+    if blocked:
+        return jsonify({"status": f"Demasiadas solicitudes. Intenta en {ttl}s."}), 429
+
+    headers = {"Authorization": f"Bearer {parametros.MP_ACCESS_TOKEN}"}
+    resp = req_lib.get(
+        "https://api.mercadopago.com/v1/payments/search",
+        headers=headers,
+        params={
+            "external_reference": str(user_id),
+            "status": "approved",
+            "sort": "date_created",
+            "criteria": "desc",
+            "limit": 20,
+        },
+    )
+    if resp.status_code != 200:
+        return jsonify({"status": "No se pudo verificar pagos pendientes."}), 502
+
+    acreditados = 0
+    for payment in resp.json().get("results", []):
+        metadata = payment.get("metadata", {})
+        credits = int(metadata.get("credits", 0))
+        pid = payment.get("id")
+        if not pid or not credits:
+            continue
+
+        conn = get_db()
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO pagos_procesados (payment_id, user_id, creditos, monto) "
+                "VALUES (%s, %s, %s, %s) "
+                "ON CONFLICT (payment_id) DO NOTHING",
+                (str(pid), user_id, credits, payment.get("transaction_amount")),
+            )
+            if cur.rowcount != 0:
+                cur.execute(
+                    "UPDATE users SET creditos = creditos + %s WHERE id = %s",
+                    (credits, user_id),
+                )
+                acreditados += credits
+            conn.commit()
+        conn.close()
+
+    return jsonify({"status": "ok", "creditos_acreditados": acreditados}), 200
 
 
 if __name__ == '__main__':
