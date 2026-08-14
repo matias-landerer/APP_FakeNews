@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _fetchUserInfo();
+      _verifyPendingPayments().then((_) => _fetchUserInfo());
     }
   }
   
@@ -61,6 +61,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           });
         }
       }
+    } catch (_) {}
+  }
+
+  Future<void> _verifyPendingPayments() async {
+    if (userId == null) return;
+    try {
+      await http
+          .post(
+            Uri.parse("$API_BASE_URL/verify-pending-payments"),
+            headers: {"Authorization": "Bearer $userId"},
+          )
+          .timeout(const Duration(seconds: 10));
     } catch (_) {}
   }
 
