@@ -426,7 +426,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           onPressed: () {
                             Navigator.pushNamed(context, "/info");
                           },
-                          child: const Text("Ir a info"),
+                          child: const Text("¿Cómo usar?"),
                         ),
                       ),
                       const SizedBox(height: 12),
