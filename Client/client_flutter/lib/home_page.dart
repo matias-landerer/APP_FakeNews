@@ -8,7 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String? initialUserId;
+  const HomePage({super.key, this.initialUserId});
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -39,8 +40,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)?.settings.arguments;
-    if (args is String) {
-      userId = args;
+    final resolvedUserId = widget.initialUserId ?? (args is String ? args : null);
+    if (resolvedUserId != null && userId != resolvedUserId) {
+      userId = resolvedUserId;
       _fetchUserInfo();
     }
   }

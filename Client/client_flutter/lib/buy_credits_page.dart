@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 class BuyCreditsPage extends StatefulWidget {
-  const BuyCreditsPage({super.key});
+  final String? initialUserId;
+  const BuyCreditsPage({super.key, this.initialUserId});
   @override
   State<BuyCreditsPage> createState() => _BuyCreditsPageState();
 }
@@ -20,7 +21,7 @@ class _BuyCreditsPageState extends State<BuyCreditsPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)?.settings.arguments;
-    if (args is String) userId = args;
+    userId = widget.initialUserId ?? (args is String ? args : userId);
   }
 
   void _showPaymentInstructions() {

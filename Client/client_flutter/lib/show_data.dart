@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ShowDataPage extends StatefulWidget {
-  const ShowDataPage({super.key});
+  final String? initialUserId;
+  const ShowDataPage({super.key, this.initialUserId});
   @override
   State<ShowDataPage> createState() => _ShowDataPageState();
 }
@@ -60,11 +61,13 @@ class _ShowDataPageState extends State<ShowDataPage> {
       return;
     }
     autoLoaded = true;
-    final args = ModalRoute.of(context)?.settings.arguments;
 
-    if (args is String) {
-      userId = args;
-      showData(args);
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final resolvedUserId = widget.initialUserId ?? (args is String ? args : null);
+
+    if (resolvedUserId != null) {
+      userId = resolvedUserId;
+      showData(resolvedUserId);
     } else {
       setState(() {
         error = "No se recibió ID de usuario.";

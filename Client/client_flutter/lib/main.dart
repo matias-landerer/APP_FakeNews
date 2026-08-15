@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'auth_guard.dart';
 import 'login_page.dart';
 import 'home_page.dart';
 import 'register_page.dart';
@@ -100,11 +101,17 @@ class MyApp extends StatelessWidget {
           : null,
       routes: {
         "/login": (context) => const LoginPage(),
-        "/home": (context) => const HomePage(),
+        "/home": (context) => AuthGuard(
+              builder: (userId) => HomePage(initialUserId: userId),
+            ),
         "/register": (context) => const RegisterPage(),
-        "/statistics": (context) => const ShowDataPage(),
+        "/statistics": (context) => AuthGuard(
+              builder: (userId) => ShowDataPage(initialUserId: userId),
+            ),
         "/info": (context) => const InfoPage(),
-        "/buy-credits": (context) => const BuyCreditsPage(),
+        "/buy-credits": (context) => AuthGuard(
+              builder: (userId) => BuyCreditsPage(initialUserId: userId),
+            ),
       },
     );
   }
