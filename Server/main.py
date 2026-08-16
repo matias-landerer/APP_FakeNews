@@ -193,17 +193,14 @@ def register():
         conn.commit()
     conn.close()
 
-    # Enviar email de verificación
     try:
         send_verification_email(email, token)
     except Exception as e:
         print(f"Error enviando email: {e}")
-        # No bloqueamos el registro si falla el email, avisamos nomás
         return jsonify({"status": "Cuenta creada, pero hubo un error al enviar el email de verificación. Contacta soporte."}), 500
 
     return jsonify({
         "status": "RegistroExitoso"
-        # Ya no devolvemos user_id porque la cuenta no está activa todavía
     }), 200
 
 
@@ -367,7 +364,6 @@ def forgot_password():
         row = cur.fetchone()
     conn.close()
 
-    # Siempre respondemos igual para no revelar si el email existe
     if row:
         token = secrets.token_urlsafe(32)
         expiry = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=1)
@@ -504,7 +500,6 @@ def buy_credits():
             "user_id": str(user_id),
             "credits": package["credits"],
         },
-        #PARA BLOQUEAR TARJETAS DE CŔEDITO
         "payment_methods": {
             "excluded_payment_types": [
                 {"id": "credit_card"}
@@ -530,7 +525,6 @@ def mp_webhook():
     import hmac
     import hashlib
 
-    # --- Identificar tipo de notificación ---
     topic = request.args.get("topic") or request.args.get("type")
     resource_id = request.args.get("id") or request.args.get("data.id")
 
@@ -543,12 +537,10 @@ def mp_webhook():
     if not topic or not resource_id:
         return "", 200
 
-    # --- Verificación de firma HMAC (solo si viene x-signature) ---
     signature = request.headers.get("x-signature", "")
     request_id = request.headers.get("x-request-id", "")
 
     if signature and topic == "payment":
-        # x-signature viene como: "ts=1704908010,v1=abc123..."
         ts = None
         v1 = None
         for part in signature.split(","):
@@ -561,7 +553,6 @@ def mp_webhook():
         if not ts or not v1:
             return jsonify({"status": "Firma malformada"}), 401
 
-        # Manifest segun especificacion de MP
         manifest = f"id:{resource_id};request-id:{request_id};ts:{ts};"
         computed = hmac.new(
             parametros.MP_WEBHOOK_SECRET.encode(),
@@ -572,7 +563,6 @@ def mp_webhook():
         if not hmac.compare_digest(computed, v1):
             return jsonify({"status": "Firma inválida"}), 401
 
-    # --- Resolver payment_ids ---
     headers = {"Authorization": f"Bearer {parametros.MP_ACCESS_TOKEN}"}
     payment_ids = []
 
@@ -590,7 +580,6 @@ def mp_webhook():
     else:
         return "", 200
 
-    # --- Verificar cada pago contra la API y acreditar ---
     for pid in payment_ids:
         if not pid:
             continue
@@ -610,7 +599,6 @@ def mp_webhook():
         if not user_id or not credits:
             continue
 
-        # --- Proteccion anti-doble-acreditacion ---
         conn = get_db()
         with conn.cursor() as cur:
             cur.execute(
@@ -619,7 +607,7 @@ def mp_webhook():
                 "ON CONFLICT (payment_id) DO NOTHING",
                 (str(pid), user_id, credits, payment.get("transaction_amount")),
             )
-            ya_existia = cur.rowcount == 0  # 0 filas insertadas = ya estaba
+            ya_existia = cur.rowcount == 0
             if not ya_existia:
                 cur.execute(
                     "UPDATE users SET creditos = creditos + %s WHERE id = %s",

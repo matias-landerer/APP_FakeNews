@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'session.dart';
 
-/// Envuelve una ruta protegida: valida que exista sesión antes de
-/// construir la página real. Si no hay sesión, redirige a /login.
 class AuthGuard extends StatelessWidget {
   final Widget Function(String userId) builder;
   const AuthGuard({super.key, required this.builder});
