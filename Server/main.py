@@ -19,7 +19,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 sdk = mercadopago.SDK(parametros.MP_ACCESS_TOKEN)
 
 CREDIT_PACKAGES = {
-    "40":  {"credits": 40,  "amount": 990},
+    "30":  {"credits": 30,  "amount": 990},
 }
 
 r = redis.Redis(
