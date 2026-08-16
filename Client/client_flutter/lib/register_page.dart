@@ -98,7 +98,6 @@ class _RegisterPageState extends State<RegisterPage> {
       });
 
       if (data["status"] == "RegistroExitoso") {
-        // Mostrar pantalla/diálogo informativo en vez de ir al home
         if (mounted) {
           showDialog(
             context: context,
