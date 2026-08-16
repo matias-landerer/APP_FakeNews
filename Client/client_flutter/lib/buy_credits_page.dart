@@ -101,9 +101,7 @@ class _BuyCreditsPageState extends State<BuyCreditsPage> {
     const secondary = Color(0xFFEF342A);
 
     final packages = [
-      {"id": "100",  "credits": "100",   "price": "\$990",   "desc": "Para empezar"},
-      //{"id": "500",  "credits": "500",   "price": "\$3.990", "desc": "Más popular"},
-      //{"id": "1000", "credits": "1.000", "price": "\$6.990", "desc": "Mejor valor"},
+      {"id": "40",  "credits": "40",   "price": "\$990"},
     ];
 
     return Scaffold(
