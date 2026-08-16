@@ -53,20 +53,15 @@ class InfoPage extends StatelessWidget {
                       child: const Text(
                         "Bienvenido/a a Fake News Detector!!\n"
                         "Como el nombre lo indica, se trata de un detector de noticias falsas.\n"
-                        "Me llamo Matías y este se trata de mi primer proyecto de software.\n"
-                        "¿CÓMO FUNCIONA?\nFácil. Solamente ingresas el titular que cualquier noticia, y la app te entregará un porcentaje de veracidad, "
+                        "¿CÓMO FUNCIONA?\nFácil. Solamente ingresas el titular de cualquier noticia, y la app te entregará un porcentaje de veracidad, "
                         "una descripción de por qué se llegó a esa conclusión y una listas con las fuentes que se usaron.\n"
                         "CONSIDERACIONES IMPORTANTES:\nEl titular debe ser descriptivo. Hay muchas noticias con titulares muy vagos. Por ejemplo,"
                         " un reportaje que estudia el indice de felicidad en Chile podría llamarse \"¿Qué tan felices somos los chilenos?\" "
                         "Lo cuál claramente no es suficiente para determinar la veracidad.\nPero cualquier oración que corresponda a una afirmación clara "
-                        "servirá como un titular para ser analizado.\nSISTEMA DE CRÉDITOS:\nMe sabe mal cobrar por el uso de esta app, "
-                        "pero lamentablemente su mero funcionamiento me genera costos, por lo que se implementó un sistema de créditos para medir su uso."
-                        " Básicamente por cada análisis se gasta un crédito, y para conseguir más se compra un paquete. Al crear una cuenta se incluyen 20"
-                        " créditos gratuitos.\nMi recomendación: prueben bien la app e intenten que se equivoque con esos 20 créditos y "
-                        "si les resulta útil vean si vale la pena obtener más.\n"
-                        "El código de esta app se encuentra disponible en https://github.com/matias-landerer/APP_FakeNews, donde hay una descripción más"
-                        " técnica por si les interesa. Cualquier crítica constructiva o destructiva es bienvenida (solo tengan en cuenta que soy una "
-                        "persona con sentimientos)\nMUCHAS GRACIAS POR USAR LA APP :)",
+                        "servirá como un titular para ser analizado.\nSISTEMA DE CRÉDITOS:\nCada análisis gasta un crédito, y para conseguir más se "
+                        "compra un paquete. Al crear una cuenta se incluyen 20"
+                        " créditos gratuitos.\nRecomendación: probar bien la app e intentar que se equivoque con esos 20 créditos y "
+                        "si la app resulta útil, evaluar si vale la pena obtener más.\nMUCHAS GRACIAS POR USAR LA APP :)",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
