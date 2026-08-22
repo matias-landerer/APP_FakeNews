@@ -416,7 +416,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                               arguments: userId,
                             );
                           },
-                          child: const Text("Comprar créditos"),
+                          child: const Text("Más créditos"),
                         ),
                       ),
                       const SizedBox(height: 12),
