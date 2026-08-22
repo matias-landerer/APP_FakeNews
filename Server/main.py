@@ -14,6 +14,7 @@ from flask_cors import CORS
 from funciones_extra import password_error, isvalidEmail, get_current_user, check_rate_limit
 from reset_password_html import RESET_PASSWORD_HTML
 from payment_result_html import SUCCESSFUL, FAILURE
+from status_pages_html import VERIFY_SUCCESS_HTML, REVOKE_SUCCESS_HTML
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 sdk = mercadopago.SDK(parametros.MP_ACCESS_TOKEN)
@@ -232,7 +233,7 @@ def verify_email():
         conn.commit()
     conn.close()
 
-    return "<h2>✅ Cuenta verificada. Ya puedes iniciar sesión en la app.</h2>", 200
+    return VERIFY_SUCCESS_HTML, 200
 
 
 @app.route("/revoke-session", methods=["GET"])
@@ -263,15 +264,7 @@ def revoke_session():
         conn.commit()
     conn.close()
 
-    return """
-    <html><body style="font-family:sans-serif; max-width:480px; margin:60px auto; text-align:center;">
-      <h2>✅ Sesión cerrada</h2>
-      <p>La sesión ha sido cerrada correctamente.</p>
-      <p style="color:#999; font-size:13px;">
-        Si no reconoces este acceso, te recomendamos cambiar tu contraseña lo antes posible.
-      </p>
-    </body></html>
-    """, 200
+    return REVOKE_SUCCESS_HTML, 200
 
 
 @app.route("/analyze", methods=["POST"])
