@@ -106,7 +106,8 @@ class _RegisterPageState extends State<RegisterPage> {
               title: const Text("Revisa tu correo"),
               content: const Text(
                 "Te enviamos un link de verificación. "
-                "Abre tu email y haz click en el enlace para activar tu cuenta.",
+                "Abre tu email y haz click en el enlace para activar tu cuenta. "
+                "Si no lo encuentras revisa en spam.",
               ),
               actions: [
                 TextButton(
