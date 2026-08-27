@@ -375,7 +375,7 @@ def forgot_password():
         except Exception as e:
             print(f"Error enviando email de reset: {e}")
 
-    return jsonify({"status": "Si el email está registrado, recibirás un correo con instrucciones."}), 200
+    return jsonify({"status": "Si el email está registrado, recibirás un correo con instrucciones. Si no lo encuentras revisa en spam."}), 200
 
 
 @app.route("/reset-password", methods=["GET"])
