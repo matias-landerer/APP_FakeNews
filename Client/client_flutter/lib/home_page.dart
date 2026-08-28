@@ -256,6 +256,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           },
                           child: TextField(
                             controller: controller,
+                            autofocus: kIsWeb,
                             minLines: 2,
                             maxLines: 8,
                             keyboardType: TextInputType.multiline,
