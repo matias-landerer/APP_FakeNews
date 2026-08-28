@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'parametros.dart';
 import 'session.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -238,11 +240,29 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           style: TextStyle(color: Color(0xFF6C6C66)),
                         ),
                         const SizedBox(height: 20),
-                        TextField(
-                          controller: controller,
-                          maxLines: 2,
-                          decoration: const InputDecoration(
-                            labelText: "Titular de la noticia",
+                        Focus(
+                          onKeyEvent: (node, event) {
+                            if (kIsWeb &&
+                                event is KeyDownEvent &&
+                                event.logicalKey == LogicalKeyboardKey.enter) {
+                              final shiftPressed =
+                                  HardwareKeyboard.instance.isShiftPressed;
+                              if (!shiftPressed) {
+                                if (!loading) enviarTitular();
+                                return KeyEventResult.handled;
+                              }
+                            }
+                            return KeyEventResult.ignored;
+                          },
+                          child: TextField(
+                            controller: controller,
+                            autofocus: kIsWeb,
+                            minLines: 2,
+                            maxLines: 8,
+                            keyboardType: TextInputType.multiline,
+                            decoration: const InputDecoration(
+                              labelText: "Titular de la noticia",
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
