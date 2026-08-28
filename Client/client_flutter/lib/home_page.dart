@@ -240,7 +240,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         const SizedBox(height: 20),
                         TextField(
                           controller: controller,
-                          maxLines: 2,
+                          minLines: 2,
+                          maxLines: 8,
+                          keyboardType: TextInputType.multiline,
                           decoration: const InputDecoration(
                             labelText: "Titular de la noticia",
                           ),
