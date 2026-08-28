@@ -105,7 +105,7 @@ class _BuyCreditsPageState extends State<BuyCreditsPage> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Comprar créditos")),
+      appBar: AppBar(title: const Text("Más créditos")),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
