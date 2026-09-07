@@ -274,6 +274,10 @@ def revoke_session():
 def analyze():
     data = request.json
     titular = data["titular"]
+
+    if len(titular) > 280:
+        return jsonify({"status": "El titular no puede superar los 280 caracteres."}), 400
+
     user_id = get_current_user()
     if not user_id:
         return jsonify({"status": "No autorizado."}), 401

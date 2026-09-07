@@ -259,6 +259,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             autofocus: kIsWeb,
                             minLines: 2,
                             maxLines: 8,
+                            maxLength: 280,
                             keyboardType: TextInputType.multiline,
                             decoration: const InputDecoration(
                               labelText: "Titular de la noticia",
