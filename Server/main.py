@@ -11,7 +11,7 @@ from conexionBDD import get_db
 from email_sender import send_verification_email, send_login_alert_email, send_password_reset_email
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from funciones_extra import password_error, isvalidEmail, get_current_user, check_rate_limit
+from funciones_extra import password_error, isvalidEmail, get_current_user, check_rate_limit, is_disposable_email
 from reset_password_html import RESET_PASSWORD_HTML
 from payment_result_html import SUCCESSFUL, FAILURE
 from status_pages_html import VERIFY_SUCCESS_HTML, REVOKE_SUCCESS_HTML
@@ -154,6 +154,9 @@ def register():
 
     if not isvalidEmail(email):
         return jsonify({"status": "Correo electrónico inválido."}), 401
+
+    if is_disposable_email(email):
+        return jsonify({"status": "No se permiten correos temporales. Usa un email personal."}), 401
 
     pass_error = password_error(password)
     if pass_error is not None:

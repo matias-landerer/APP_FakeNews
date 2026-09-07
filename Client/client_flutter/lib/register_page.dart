@@ -24,6 +24,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
   int userid = 0;
 
+  String invalidPasswordMsg = 'Su contraseña debe tener:\nMínimo 8 caracteres\nMínimo una minúscula\nMínimo una mayúscula\nMínimo un número\nMínimo un símbolo';
+
+
   bool isValidEmail(String email) {
   final emailRegex = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -31,12 +34,12 @@ class _RegisterPageState extends State<RegisterPage> {
   return emailRegex.hasMatch(email);
 }
   String passwordError(String password) {
-  if (password.length < 8)              return 'Mínimo 8 caracteres';
-  if (!RegExp(r'[a-z]').hasMatch(password)) return 'Debe incluir una minúscula';
-  if (!RegExp(r'[A-Z]').hasMatch(password)) return 'Debe incluir una mayúscula';
-  if (!RegExp(r'\d').hasMatch(password))    return 'Debe incluir un número';
+  if (password.length < 8)              return invalidPasswordMsg;
+  if (!RegExp(r'[a-z]').hasMatch(password)) return invalidPasswordMsg;
+  if (!RegExp(r'[A-Z]').hasMatch(password)) return invalidPasswordMsg;
+  if (!RegExp(r'\d').hasMatch(password))    return invalidPasswordMsg;
   if (!RegExp(r'[!@#$%^&*(),.?":{}|<>_-]').hasMatch(password)) {
-    return 'Debe incluir un símbolo';
+    return invalidPasswordMsg;
   }
   return "";
 }
