@@ -2,6 +2,7 @@ import jwt
 import parametros
 from re import search
 from flask import request
+from disposable_email_domains import blocklist
 
 def password_error(password: str) -> str | None:
     if len(password) < 8:
@@ -18,6 +19,14 @@ def password_error(password: str) -> str | None:
 
 def isvalidEmail (email: str) -> bool:
     return search(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email)
+
+def is_disposable_email(email: str) -> bool:
+    """
+    Retorna True si el dominio del email pertenece a un proveedor
+    de correo temporal/desechable conocido (mailinator, yopmail, etc).
+    """
+    dominio = email.strip().lower().rsplit('@', 1)[-1]
+    return dominio in blocklist
 
 def get_current_user():
     auth = request.headers.get("Authorization", "")
