@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'auth_guard.dart';
 import 'guest_guard.dart';
 import 'login_page.dart';
@@ -11,6 +12,7 @@ import 'buy_credits_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  usePathUrlStrategy();
   final userId = await getSession();
   runApp(MyApp(initialUserId: userId));
 }
