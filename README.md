@@ -11,7 +11,7 @@ Proyecto desarrollado por **Matías**, estudiante de Ciencia de la Computación.
 
 ## ✨ Características
 
-- **Verificación de titulares con IA**: análisis de credibilidad mediante Claude (Anthropic) con búsqueda web integrada, retornando porcentaje de veracidad, explicación y fuentes citables.
+- **Verificación de titulares con IA**: análisis de credibilidad mediante Claude (Anthropic) con búsqueda web integrada, retornando porcentaje de veracidad, explicación y fuentes citables. Los titulares están limitados a un máximo de 280 caracteres (tanto en frontend como en backend).
 - **Autenticación completa**: registro con verificación por correo, inicio de sesión con usuario o email, JWT para manejo de sesiones.
 - **Seguridad reforzada**:
   - Contraseñas hasheadas con bcrypt.
@@ -20,6 +20,7 @@ Proyecto desarrollado por **Matías**, estudiante de Ciencia de la Computación.
   - Alerta por correo en cada inicio de sesión, con opción de revocar la sesión con un click.
   - Recuperación de contraseña vía email con tokens de un solo uso y expiración de 1 hora.
   - Validación de contraseñas robustas (mayúscula, minúscula, número, símbolo, largo mínimo).
+  - Bloqueo de correos temporales/desechables (mailinator, yopmail, etc.) al registrarse.
 - **Historial de consultas**: cada usuario puede revisar los titulares que ha analizado previamente y sus resultados.
 - **Sistema de créditos y pagos**:
   - Modelo freemium: créditos gratuitos al registrarse, consumo de 1 crédito por consulta.
