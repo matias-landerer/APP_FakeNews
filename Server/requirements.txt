@@ -6,7 +6,6 @@ bcrypt
 pyjwt
 redis
 mercadopago
-google-genai
 anthropic
 python-dotenv
 disposable-email-domains
