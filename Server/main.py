@@ -298,6 +298,11 @@ def analyze():
 
     if creditos > 0:
         resultado = verificar_titular(titular)
+        if resultado["score"] == "":
+            return jsonify({
+            "resultado": {"score": None, "label": resultado["label"], "fuentes": None}
+        }), 401
+
         conn = get_db()
         with conn.cursor() as cur:
             cur.execute(
