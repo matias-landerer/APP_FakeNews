@@ -1,7 +1,5 @@
 import parametros
 import anthropic
-from google import genai
-from google.genai import types
 
 client = anthropic.Anthropic(api_key=parametros.ANTHROPIC_API_KEY)
 
@@ -50,7 +48,7 @@ def verificar_titular(titular: str) -> dict:
         return {"score": score, "label": label, "fuentes": fuentes}
     except Exception as error:
         print(error)
-        return {"score": "", "label": f"Error al consultar titular: {error}", "fuentes": []}
+        return {"score": "", "label": "Error al consultar titular: Servidor en mantenimiento. Por favor intentar más tarde.", "fuentes": []}
 
 if __name__ == '__main__':
     titular = input('Ingrese el titular: ')
