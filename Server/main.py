@@ -298,10 +298,10 @@ def analyze():
 
     if creditos > 0:
         resultado = verificar_titular(titular)
-        if resultado["score"] == "":
+        if resultado.get("error"):
             return jsonify({
             "resultado": {"score": None, "label": resultado["label"], "fuentes": None}
-        }), 401
+        }), 503
 
         conn = get_db()
         with conn.cursor() as cur:
@@ -324,7 +324,7 @@ def analyze():
     else:
         return jsonify({
             "resultado": {"score": None, "label": "Error: No tiene suficientes créditos", "fuentes": None}
-        }), 401
+        }), 402
 
 
 @app.route("/user/me", methods=["GET"])
