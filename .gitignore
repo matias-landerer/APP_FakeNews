@@ -29,3 +29,5 @@ Client/client_flutter/.gitignore
 
 fake_news_app_context.md
 client_prototipo/
+
+deploy_web.sh

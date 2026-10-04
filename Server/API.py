@@ -45,10 +45,10 @@ def verificar_titular(titular: str) -> dict:
         except (AttributeError, TypeError):
             fuentes = []
 
-        return {"score": score, "label": label, "fuentes": fuentes}
+        return {"error": False, "score": score, "label": label, "fuentes": fuentes}
     except Exception as error:
         print(error)
-        return {"score": "", "label": "Error al consultar titular: Servidor en mantenimiento. Por favor intentar más tarde.", "fuentes": []}
+        return {"error": True, "score": None, "label": "Error al consultar titular: Servidor en mantenimiento. Por favor intentar más tarde.", "fuentes": []}
 
 if __name__ == '__main__':
     titular = input('Ingrese el titular: ')

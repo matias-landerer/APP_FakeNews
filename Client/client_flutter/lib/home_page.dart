@@ -127,9 +127,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         return;
       }
 
-      if (data["resultado"]?["label"] ==
-          "Error: No tiene suficientes créditos") {
-        throw Exception("Error: No tiene suficientes créditos");
+      if (response.statusCode != 200) {
+        setState(() {
+          error = switch (response.statusCode) {
+            402 => "Error: No tiene suficientes créditos.",
+            503 => "Error: Servidor en mantenimiento. Por favor intentar más tarde.",
+            _ => data["status"]?.toString() ?? "Error inesperado.",
+          };
+        });
+        return;
       }
 
       setState(() {
@@ -165,10 +171,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     } on FormatException catch (_) {
       setState(() {
         error = "Error en la respuesta del servidor.";
-      });
-    } on Exception catch (_) {
-      setState(() {
-        error = "Error: No tiene suficientes créditos";
       });
     } catch (e) {
       setState(() {
