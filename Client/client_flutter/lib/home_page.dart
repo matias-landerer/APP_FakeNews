@@ -195,6 +195,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           IconButton(
             tooltip: showOptions ? "Ocultar opciones" : "Mostrar opciones",
             icon: const Icon(Icons.more_vert),
+            iconSize: 38,
+            style: IconButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.12),
+            ),
             onPressed: () {
               setState(() {
                 showOptions = !showOptions;

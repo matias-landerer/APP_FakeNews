@@ -20,7 +20,7 @@ def verificar_titular(titular: str) -> dict:
         response = client.messages.create(
             model=parametros.MODEL_ID,
             max_tokens=1024,
-            tools=[{"type": "web_search_20250305", "name": "web_search"}],
+            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 3}],
             messages=[{"role": "user", "content": prompt}],
         )
 
@@ -36,7 +36,9 @@ def verificar_titular(titular: str) -> dict:
         try:
             for block in response.content:
                 if block.type == "web_search_tool_result":
-                    contenido = getattr(block, "content", None) or []
+                    contenido = getattr(block, "content", None)
+                    if not isinstance(contenido, list):
+                        continue
                     for item in contenido:
                         uri = getattr(item, "url", None)
                         title = getattr(item, "title", None) or uri
