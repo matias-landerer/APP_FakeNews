@@ -1,0 +1,50 @@
+# docker-compose.prod.yml — producción en la e2-micro (1 GB RAM).
+# Usa la imagen publicada en GHCR: en la VM no se construye nada.
+# Deploy: docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d
+services:
+  backend:
+    image: ghcr.io/matias-landerer/fake-news-backend:latest
+    ports:
+      - "127.0.0.1:5000:5000"
+    env_file: ./.env
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    # Ajustado a una VM de 1 GB: pocos buffers y pocas conexiones
+    # (2 workers x 4 threads = máximo 8 conexiones simultáneas desde el backend).
+    command: >
+      postgres
+      -c shared_buffers=64MB
+      -c work_mem=2MB
+      -c maintenance_work_mem=32MB
+      -c max_connections=20
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    # Solo guarda rate limits y lockouts (todo con TTL): tope de memoria y sin persistencia.
+    command: ["redis-server", "--maxmemory", "32mb", "--maxmemory-policy", "volatile-lru", "--save", ""]
+    restart: unless-stopped
+
+volumes:
+  pgdata:

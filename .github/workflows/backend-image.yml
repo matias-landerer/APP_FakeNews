@@ -1,0 +1,60 @@
+# .github/workflows/backend-image.yml
+# Construye la imagen del backend en cada PR a develop (solo valida que compile)
+# y la publica en GHCR en cada push a main.
+name: Backend image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Server/**"
+      - ".github/workflows/backend-image.yml"
+  pull_request:
+    branches: [develop]
+    paths:
+      - "Server/**"
+      - ".github/workflows/backend-image.yml"
+  workflow_dispatch:
+
+env:
+  IMAGE: ghcr.io/matias-landerer/fake-news-backend
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login a GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+
+      - name: Build (y push si es main)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Server
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
