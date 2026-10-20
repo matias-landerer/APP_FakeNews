@@ -9,4 +9,5 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "--access-logfile", "-", "--error-logfile", "-", "main:app"]
+ENV GUNICORN_CMD_ARGS="--workers 2 --threads 4 --worker-class gthread --timeout 90 --access-logfile - --error-logfile -"
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "main:app"]
