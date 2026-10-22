@@ -21,6 +21,7 @@ CREATE TABLE consultas(
     titular TEXT,
     score VARCHAR(255),
     label TEXT,
+    creado_en TIMESTAMP DEFAULT NOW(),
     CONSTRAINT fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES "users"(ID)
