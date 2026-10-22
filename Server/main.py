@@ -475,7 +475,8 @@ def show_stats():
     conn = get_db()
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT titular, score, label FROM consultas WHERE user_id = %s",
+            "SELECT titular, score, label FROM consultas WHERE user_id = %s "
+            "ORDER BY creado_en ASC NULLS FIRST, ctid ASC",
             (user_id,)
         )
         rows = cur.fetchall()
