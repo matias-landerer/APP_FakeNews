@@ -486,6 +486,9 @@ def show_stats():
 
 @app.route("/buy-credits", methods=["POST"])
 def buy_credits():
+    if not parametros.PAYMENTS_ENABLED:
+        return jsonify({"status": "La compra de créditos está deshabilitada temporalmente."}), 503
+
     user_id = get_current_user()
     if not user_id:
         return jsonify({"status": "No autorizado."}), 401

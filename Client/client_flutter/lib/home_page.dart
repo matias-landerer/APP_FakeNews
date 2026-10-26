@@ -431,21 +431,23 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           child: const Text("Historial de consultas"),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() { showOptions = false; });
-                            Navigator.pushNamed(
-                              context,
-                              "/buy-credits",
-                              arguments: userId,
-                            );
-                          },
-                          child: const Text("Más créditos"),
+                      if (PAYMENTS_ENABLED) ...[
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() { showOptions = false; });
+                              Navigator.pushNamed(
+                                context,
+                                "/buy-credits",
+                                arguments: userId,
+                              );
+                            },
+                            child: const Text("Más créditos"),
+                          ),
                         ),
-                      ),
+                      ],
                       const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,

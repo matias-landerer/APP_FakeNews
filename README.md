@@ -122,6 +122,8 @@ MODEL_ID=claude-haiku-4-5
 
 MP_ACCESS_TOKEN=
 MP_WEBHOOK_SECRET=
+
+PAYMENTS_ENABLED=true
 ```
 
 3. Levanta los servicios:
