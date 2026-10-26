@@ -9,6 +9,7 @@ import 'show_data.dart';
 import 'info.dart';
 import 'session.dart';
 import 'buy_credits_page.dart';
+import 'parametros.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -112,10 +113,17 @@ class MyApp extends StatelessWidget {
               builder: (userId) => ShowDataPage(initialUserId: userId),
             ),
         "/info": (context) => const InfoPage(),
-        "/buy-credits": (context) => AuthGuard(
-              builder: (userId) => BuyCreditsPage(initialUserId: userId),
-            ),
+        if (PAYMENTS_ENABLED)
+          "/buy-credits": (context) => AuthGuard(
+                builder: (userId) => BuyCreditsPage(initialUserId: userId),
+              ),
       },
+      onUnknownRoute: (settings) => MaterialPageRoute(
+        builder: (_) => AuthGuard(
+          builder: (userId) => HomePage(initialUserId: userId),
+        ),
+        settings: const RouteSettings(name: "/home"),
+      ),
     );
   }
 }
