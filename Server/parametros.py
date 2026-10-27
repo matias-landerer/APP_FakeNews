@@ -23,3 +23,5 @@ MODEL_ID = os.getenv("MODEL_ID")
 
 MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
 MP_WEBHOOK_SECRET = os.getenv("MP_WEBHOOK_SECRET")
+
+PAYMENTS_ENABLED = os.getenv("PAYMENTS_ENABLED", "true").strip().lower() == "true"
