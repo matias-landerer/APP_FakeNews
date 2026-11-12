@@ -20,7 +20,7 @@ def verificar_titular(titular: str) -> dict:
         response = client.messages.create(
             model=parametros.MODEL_ID,
             max_tokens=1024,
-            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 3}],
+            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 1}],
             messages=[{"role": "user", "content": prompt}],
         )
 
