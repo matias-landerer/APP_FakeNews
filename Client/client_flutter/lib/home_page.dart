@@ -114,7 +114,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               },
             body: jsonEncode({"titular": controller.text}),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60));
 
       final data = jsonDecode(response.body);
 
